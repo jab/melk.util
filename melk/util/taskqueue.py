@@ -2,13 +2,12 @@ import threading
 from Queue import Queue
 
 
-"""
-Recipe from http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/475160
-this is a part of python 2.5, should probably check for 
-it there
-"""
-
 class TaskQueue(Queue):
+    """
+    Recipe from http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/475160
+    this is a part of python 2.5, should probably check for 
+    it there
+    """
 
     def __init__(self):
         Queue.__init__(self)
