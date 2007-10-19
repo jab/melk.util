@@ -3,7 +3,7 @@ import threading
 from threading import Thread 
 import httplib2 
 from melk.util.taskqueue import TaskQueue as Queue 
-from melk.util.threadpool import ThreadPool, OutputQueueMixin
+from melk.util.threadpool import ThreadPool, OutputQueueMixin, DEFAULT_POOLSIZE
 import traceback 
 
 log = logging.getLogger(__name__)
@@ -29,7 +29,7 @@ class Spider(ThreadPool, OutputQueueMixin):
     def __init__(self,
                  cache=None, 
                  timeout=60,
-                 poolsize=10,
+                 poolsize=DEFAULT_POOLSIZE,
                  output_changed_only=True,
                  output_queue=None):
         """

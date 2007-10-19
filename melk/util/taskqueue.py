@@ -5,8 +5,7 @@ from Queue import Queue
 class TaskQueue(Queue):
     """
     Recipe from http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/475160
-    this is a part of python 2.5, should probably check for 
-    it there
+    this is a part of python 2.5, should probably check for it there
     """
 
     def __init__(self):
@@ -59,4 +58,26 @@ class TaskQueue(Queue):
         finally:
             self.all_tasks_done.release()
 
+
+class QueueProxy: 
+    """
+    """
+    def __init__(self, queue): 
+        self._queue = queue
+
+    def __getattr__(self, name): 
+        return getattr(self._queue, name)
+
+class QueueInputAdapter(QueueProxy): 
+    """
+    wraps a Queue and performs an arbitrary transformation
+    of inputs before pushing (on the pushing thread)
+    """
+    def __init__(self, queue, input_adaptation=None):
+        if input_adaptation is not None:
+            self._transform = input_adaptation
+
+    def _put(self, item): 
+        xitem = self._transform(item)
+        return self._queue.put(xitem)
 

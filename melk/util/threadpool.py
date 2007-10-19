@@ -6,6 +6,8 @@ import logging
 
 log = logging.getLogger(__name__)
 
+DEFAULT_POOLSIZE = 10
+
 class ThreadPool:
     """
     Simple threadpool that processes
@@ -13,11 +15,12 @@ class ThreadPool:
 
     implement the _do method or passed
     as a single argument function 
-    to the constructor to specify the 
+    to the constructor to specify the
     processing.
     """
 
-    def __init__(self, poolsize=10, processor=None): 
+    def __init__(self, poolsize=DEFAULT_POOLSIZE, 
+                 processor=None): 
         self.input_queue = Queue()
 
         if processor is not None:
