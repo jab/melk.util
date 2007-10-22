@@ -16,5 +16,7 @@ setup(
     include_package_data=True,
     test_suite = 'nose.collector',
     entry_points="""
+    [console_scripts]
+    melk_hash = melk.util.hash:main
     """,
 )
