@@ -56,11 +56,10 @@ class Spider(ThreadPool, OutputQueueMixin):
 
         response, content = http_client.request(url, "GET")
 
-        if response.fromcache:
+        if response.fromcache and self._output_changed_only:
             log.info("%s unchanged" % url)
-            if self._output_changed_only:
-                return 
-
+            return
+        
         if response.status == 200:
             log.info("%s updated" % url)
             self.output_queue.put(SpiderResult(url, response, content))
