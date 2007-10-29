@@ -62,7 +62,6 @@ class BasicFactory(object):
 
         self._constructors[uri] = (constructor, dict(defaults))
 
-
 class BasicObjectURIFactory(BasicFactory): 
     
     def create_from_uri(self, object_uri):
