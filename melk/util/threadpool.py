@@ -54,8 +54,35 @@ class ThreadPool:
                 log.error(traceback.format_exc())
 
 
+class DeferredCall(object): 
+    """
+    """
+    def __init__(self, call, *args, **kwargs):
+        self.call = call
+        self.args = args
+        self.kwargs = kwargs
+
+    def __call__(self):
+        self.call(*self.args, **self.kwargs)
+        
+class CallPool(ThreadPool):
+    """
+    This is a ThreadPool which assumes that 0 
+    argument callables have been placed on the input_queue, 
+    eg the DeferredCall above.
+    """
+    def __init__(self, poolsize=DEFAULT_POOLSIZE):
+        ThreadPool.__init__(self, poolsize=poolsize)
+
+    def _do(self, job):
+        job()
+
+
 class OutputQueueMixin(object): 
-    
+    """
+    just a simple mixin to add an 
+    ouput queue to a ThreadPool subclass
+    """
     def __init__(self, output_queue): 
         if output_queue is None:
             self.output_queue = Queue()
