@@ -12,7 +12,7 @@ setup(
     dependency_links=[
     ],
     packages=find_packages(),
-    namespace_packages=['melk'],
+    namespace_packages=['melk', 'melk.util'],
     include_package_data=True,
     test_suite = 'nose.collector',
     entry_points="""
