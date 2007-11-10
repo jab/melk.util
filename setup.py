@@ -40,3 +40,4 @@ setup(
     melk_hash = melk.util.hash:main
     """,
 )
+
