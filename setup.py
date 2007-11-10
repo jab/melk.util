@@ -23,7 +23,7 @@ setup(
     name='melk.util',
     version="0.1",
     description="General utilities used by melkjug",
-    license="GPLv2 or later",
+    license="GPLv2 or any later version",
     author="Luke Tucker",
     author_email="ltucker@openplans.org",
     #url="",
