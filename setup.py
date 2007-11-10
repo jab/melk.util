@@ -26,10 +26,11 @@ setup(
     license="GPLv2 or any later version",
     author="Luke Tucker",
     author_email="ltucker@openplans.org",
-    #url="",
+    url="http://melkjug.openplans.org",
     install_requires=[
     ],
     dependency_links=[
+      "https://svn.openplans.org/melk/eggs/links.html",
     ],
     packages=find_packages(),
     namespace_packages=['melk', 'melk.util'],
