@@ -33,7 +33,7 @@ class BasicFactory(object):
                 args.update(kwargs)
 
                 # try to construct the object
-                log.info("Creating object %s args=%s" % (uri, args))
+                log.debug("Creating object %s args=%s" % (uri, args))
                 return ctor(**args)
             except:
                 log.error("Error creating object %s, args=%s [%s]" % (uri, args, traceback.format_exc()))
@@ -58,7 +58,7 @@ class BasicFactory(object):
         if schema is not None:
             constructor = _validated(constructor, schema)
             
-        log.info("Registering constructor for %s" % uri)
+        log.debug("Registering constructor for %s" % uri)
 
         self._constructors[uri] = (constructor, dict(defaults))
 

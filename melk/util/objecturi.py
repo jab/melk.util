@@ -2,6 +2,9 @@ import urlparse
 import urllib
 import cgi
 
+
+# XXX hrm just make a class here? 
+
 """
 Normalization: 
 
@@ -17,6 +20,10 @@ eg:
 >>> norm(uri)
 'http://joe:blow@www.example.org:9374/objects/author?email=foo%40example.org&name=Jim%40Jones&name=Joe%20Schmoe'
 """
+
+def uri_escape(value):
+    return urllib.quote_plus(value)
+
 
 def normalize_object_uri(object_uri): 
     """
@@ -66,3 +73,21 @@ def parse_object_uri(object_uri):
             args[arg] = list(query_args[arg])
 
     return base_uri, args
+
+
+def _make_arg(k, v): 
+    arg = uri_escape(k)
+    if v:
+        arg += "=%s" % uri_escape(v)
+    arg += "&"
+    return arg
+
+
+def make_object_uri(base_uri, cfg):
+    uri = base_uri + "?"
+
+    if cfg and len(cfg) > 0:
+        for k in cfg.keys():
+            uri += _make_arg(k, cfg[k])
+
+    return normalize_object_uri(uri)

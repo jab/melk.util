@@ -1,6 +1,8 @@
 import random
 import sha
+import md5
 import base64
+import re
 
 __all__ = ['salty_hash', 'salty_hash_matches']
 
@@ -29,6 +31,20 @@ def salty_hash_matches(input, hash):
     """
     salt, xx = hash.split(':')
     return salty_hash(input, salt) == hash
+
+
+MELK_ID_PAT = re.compile(r'melk\:[\d,a-f]{8}-[\d,a-f]{4}-[\d,a-f]{4}-[\d,a-f]{4}-[\d,a-f]{12}\Z')
+def is_melk_id(mid): 
+    return MELK_ID_PAT.match(mid) is not None
+
+def melk_id(iid, source):
+    hash = md5.new()
+    hash.update(iid)
+    hash.update(source)
+    hex = hash.hexdigest()
+    
+    return 'melk:%s-%s-%s-%s-%s' % (hex[0:8], hex[8:12], hex[12:16], 
+                                    hex[16:20], hex[20:32])
 
 def main(): 
     import sys
