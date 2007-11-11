@@ -28,6 +28,7 @@ setup(
     author_email="ltucker@openplans.org",
     url="http://melkjug.openplans.org",
     install_requires=[
+     "httplib2",
     ],
     dependency_links=[
       "https://svn.openplans.org/melk/eggs/links.html",
