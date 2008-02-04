@@ -22,6 +22,7 @@ import sha
 import md5
 import base64
 import re
+from struct import pack
 
 __all__ = ['salty_hash', 'salty_hash_matches']
 
@@ -32,10 +33,7 @@ def salty_hash(input, salt=None):
     used.
     """
     if salt is None:
-        # random.getrandbits(32) ? how -> str?? 
-        salt = ''
-        for i in range(4): 
-            salt += chr(random.randrange(0,255))
+        salt = pack('L', random.getrandbits(32))
         salt = base64.b64encode(salt)
 
     hasher = sha.new()
