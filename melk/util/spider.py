@@ -20,7 +20,7 @@
 import logging 
 import threading
 from threading import Thread 
-import httplib2 
+from melk.util.http import NoKeepaliveHttp as Http
 from melk.util.taskqueue import TaskQueue as Queue 
 from melk.util.threadpool import ThreadPool, OutputQueueMixin, DEFAULT_POOLSIZE
 import traceback 
@@ -88,6 +88,6 @@ class Spider(ThreadPool, OutputQueueMixin):
     def _get_http_client(self):
         # currently this is implemented as a thread local
         if not hasattr(self._local, 'http_client'):
-            self._local.http_client = httplib2.Http(cache=self._cache, 
-                                                   timeout=self._timeout)
+            self._local.http_client = Http(cache=self._cache, 
+                                           timeout=self._timeout)
         return self._local.http_client
