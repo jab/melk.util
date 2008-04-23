@@ -83,7 +83,8 @@ class BasicObjectURIFactory(BasicFactory):
         """
         # break the object_uri into a base_uri and the
         # constructor arguments
-        base_uri, uri_args = parse_object_uri(object_uri)
+        base_uri, raw_args = parse_object_uri(object_uri)
+        uri_args = dict([(arg[0].encode('ascii'), arg[1]) for arg in raw_args.items()])
         return self.create(base_uri, **uri_args)
 
     def register(self, uri, constructor, schema=None, defaults=None): 
