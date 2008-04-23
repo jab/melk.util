@@ -45,21 +45,16 @@ class BasicFactory(object):
 
     def create(self, uri, **kwargs): 
         # find a constructor for uri
-        if uri in self._constructors:
-            try:
-                # put arguments together
-                ctor, args = self._constructors[uri]
-                args.update(kwargs)
-
-                # try to construct the object
-                log.debug("Creating object %s args=%s" % (uri, args))
-                return ctor(**args)
-            except:
-                log.error("Error creating object %s, args=%s [%s]" % (uri, args, traceback.format_exc()))
-                return None
-        else:
-            log.warn("No object registered for %s" % uri)
+        ctor_info = self._constructors.get(uri, None)
+        if ctor_info is None:
             return None
+        else:
+            ctor, args = ctor_info
+            args.update(kwargs)
+
+            # try to construct the object
+            log.debug("Creating object %s args=%s" % (uri, args))
+            return ctor(**args)
 
     def register(self, uri, constructor, schema=None, defaults=None):
         """
@@ -86,18 +81,14 @@ class BasicObjectURIFactory(BasicFactory):
     def create_from_uri(self, object_uri):
         """
         """
-        # break the filter_uri into a base_uri and the
+        # break the object_uri into a base_uri and the
         # constructor arguments
-        base_uri, uri_args = self.parse_uri(object_uri)
+        base_uri, uri_args = parse_object_uri(object_uri)
         return self.create(base_uri, **uri_args)
-
-    def parse_uri(self, object_uri): 
-        return parse_object_uri(object_uri)
-
 
     def register(self, uri, constructor, schema=None, defaults=None): 
         # normalize and separate off any arguments
-        base_uri, args = self.parse_uri(uri)
-        return BasicFactory.register(self, base_uri, constructor, 
+        base_uri, args = parse_object_uri(uri)
+        return BasicFactory.register(self, base_uri, constructor,
                                      schema, defaults)
-        
+
