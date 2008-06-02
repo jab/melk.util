@@ -17,6 +17,7 @@
 # Boston, MA  02110-1301
 # USA
 
+import simplejson
 
 class Dibject(dict):
     """
@@ -59,3 +60,17 @@ class Dibject(dict):
             self.__dict__[key] = value
         else:
             return self.__setitem__(key, value)
+
+def json_sleep(ff):
+    """
+    returns unicode string with json dump of feed object
+    """
+    return simplejson.dumps(ff).decode('utf-8')
+
+def json_wake(juni):
+    """
+    returns feed object obtained by parsing the unicode json 
+    string given, as produced by json_sleep
+    """
+    return simplejson.loads(juni, object_hook=Dibject)
+
