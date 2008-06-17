@@ -74,3 +74,5 @@ def json_wake(juni):
     """
     return simplejson.loads(juni, object_hook=Dibject)
 
+def dibjectify(thinger):
+    return json_wake(json_sleep(thinger))
