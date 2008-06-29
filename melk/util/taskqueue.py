@@ -100,6 +100,8 @@ class QueueInputAdapter(QueueProxy):
             self._transform = input_adaptation
 
     def _put(self, item): 
+        # XXX won't this raise an AttributeError if we were initialized
+        # with no input_adaptation parameter, since self._transform won't
+        # have been defined?
         xitem = self._transform(item)
         return self._queue.put(xitem)
-

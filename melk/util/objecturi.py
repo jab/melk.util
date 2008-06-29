@@ -28,7 +28,7 @@ __all__ = ['normalize_object_uri', 'parse_object_uri', 'make_object_uri']
 
 def normalize_object_uri(uri): 
     """
-    normalizes a object uri so that it can 
+    normalizes an object uri so that it can 
     be compared directly to another normalized
     object_uri for equality as strings.
 

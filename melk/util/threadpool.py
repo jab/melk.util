@@ -30,7 +30,7 @@ DEFAULT_POOLSIZE = 10
 class ThreadPool:
     """
     Simple threadpool that processes
-    items placed in it's input queue. 
+    items placed in its input queue. 
 
     implement the _do method or passed
     as a single argument function 

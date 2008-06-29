@@ -36,7 +36,7 @@ def is_listy(ob):
     
     try:
         ob[0:0]
-        # it's iterable and slicable...
+        # it's iterable and sliceable...
         return True
     except TypeError:
         return False

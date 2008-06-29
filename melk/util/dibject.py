@@ -21,7 +21,7 @@ import simplejson
 
 class Dibject(dict):
     """
-    A dibject is a dict that can access it's keys through 
+    A dibject is a dict that can access its keys through 
     attributes like javascript objects...
 
     eg: 
