@@ -96,12 +96,9 @@ class QueueInputAdapter(QueueProxy):
     of inputs before pushing (on the pushing thread)
     """
     def __init__(self, queue, input_adaptation=None):
-        if input_adaptation is not None:
-            self._transform = input_adaptation
+        self._transform = input_adaptation
 
-    def _put(self, item): 
-        # XXX won't this raise an AttributeError if we were initialized
-        # with no input_adaptation parameter, since self._transform won't
-        # have been defined?
-        xitem = self._transform(item)
-        return self._queue.put(xitem)
+    def _put(self, item):
+        if self._transform is not None:
+            item = self._transform(item)
+        return self._queue.put(item)
