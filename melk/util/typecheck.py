@@ -27,6 +27,9 @@ LIST_TYPES = (ListType, TupleType, UserList)
 def is_listy(ob):
     if isinstance(ob, LIST_TYPES):
         return True
+        
+    if is_atomic(ob):
+        return False
 
     # otherwise listen for quacks
     try: 
