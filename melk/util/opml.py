@@ -15,7 +15,7 @@ def feeds_in_opml(opml_data):
     urls = []
     #for node in opml.xpath('//outline[@type="rss"]'):
     for node in opml.getiterator('outline'):
-        if node.get('type', None).lower() == 'rss':
+        if node.get('type', '').lower() == 'rss':
             url= node.get('xmlUrl', None)
             if url is not None:
                 urls.append(url)
