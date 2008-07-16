@@ -79,7 +79,7 @@ class Spider(ThreadPool, OutputQueueMixin):
             log.info("%s unchanged" % url)
             return
         
-        if response.status == 200:
+        if response.status == 200 or (response.status == 304 and not self._output_changed_only):
             log.info("%s updated" % url)
             self.output_queue.put(SpiderResult(url, response, content))
         else:
