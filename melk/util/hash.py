@@ -18,11 +18,15 @@
 # USA
 
 import base64
-import hashlib
 import random
 import re
 import sha
 from struct import pack
+
+try:
+    from hashlib import md5 # python2.5
+except ImportError:
+    from md5 import md5 # python 2.4
 
 __all__ = ['salty_hash', 'salty_hash_matches']
 
@@ -55,7 +59,7 @@ def is_melk_id(mid):
     return MELK_ID_PAT.match(mid) is not None
 
 def melk_id(iid, source=None):
-    hash = hashlib.md5()
+    hash = md5()
     hash.update(iid)
     if source is not None:
         hash.update(source)
