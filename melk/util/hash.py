@@ -17,11 +17,11 @@
 # Boston, MA  02110-1301
 # USA
 
-import random
-import sha
-import md5
 import base64
+import hashlib
+import random
 import re
+import sha
 from struct import pack
 
 __all__ = ['salty_hash', 'salty_hash_matches']
@@ -55,7 +55,7 @@ def is_melk_id(mid):
     return MELK_ID_PAT.match(mid) is not None
 
 def melk_id(iid, source=None):
-    hash = md5.new()
+    hash = hashlib.md5()
     hash.update(iid)
     if source is not None:
         hash.update(source)

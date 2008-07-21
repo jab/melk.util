@@ -17,11 +17,11 @@
 # Boston, MA  02110-1301
 # USA
 
+import hashlib
 import random
 from base64 import b16encode
-import md5
 
 def nonce_str(): 
-    m = md5.new()
+    m = hashlib.md5()
     m.update('%d' % random.getrandbits(128))
     return b16encode(m.digest())
