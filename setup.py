@@ -21,7 +21,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='melk.util',
-    version="0.3",
+    version="0.4",
     description="General utilities used by melkjug",
     license="GPLv2 or any later version",
     author="Luke Tucker",
