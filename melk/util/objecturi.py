@@ -66,16 +66,19 @@ def parse_object_uri(object_uri):
     base_uri = urlparse.urlunsplit(list(uri_parts[0:3]) + ['','']).decode('ascii')
     query_args = cgi.parse_qs(uri_parts[3], keep_blank_values=True)
     
-    # the returned parse appears to be in latin-1... !? whatever
+    def _unqslify(arg):
+        # the returned parse appears to be in latin-1... !? whatever...
+        return arg.decode('latin-1').decode('unicode_escape')
+
     args = {}
     for arg in query_args:
+        uarg = _unqslify(arg)
         if len(query_args[arg]) == 1:
-            args[arg.decode('latin-1')] = query_args[arg][0].decode('latin-1')
+            args[uarg] = _unqslify(query_args[arg][0])
         else:
-            args[arg.decode('latin-1')] = [x.decode('latin-1') for x in query_args[arg]]
+            args[uarg] = [_unqslify(x) for x in query_args[arg]]
 
     return base_uri, args
-
 
 def make_object_uri(base_uri, cfg):
     """
@@ -84,24 +87,24 @@ def make_object_uri(base_uri, cfg):
 
     keys should be strings, values should 
     be unicodes, or lists of unicodes. strings
-    or other types that have __str__ may be used but 
-    they _must_ produce utf-8 representations.
+    or other types that have __str__ may be used but
+    they must be in utf-8 encoding.
     """
 
     qargs = []
     for k, vs in cfg.items():
-        okey = _latin_str(k)
+        okey = _ascii_escape(k)
         if is_atomic(vs):
-            qargs.append( (okey, _latin_str(vs)) )
+            qargs.append( (okey, _ascii_escape(vs)) )
         elif is_listy(vs):
             for v in vs:
-                qargs.append( (okey, _latin_str(v)) )
+                qargs.append( (okey, _ascii_escape(v)) )
 
     uri = base_uri + "?" + urllib.urlencode(qargs)
     return normalize_object_uri(uri)
 
-def _latin_str(istr):
+def _ascii_escape(istr):
     if isinstance(istr, UnicodeType):
-        return istr.encode('latin-1')
+        return istr.encode('unicode_escape')
     else:
-        return str(istr).decode('utf-8').encode('latin-1')
+        return str(istr).decode('utf-8').encode('unicode_escape')
