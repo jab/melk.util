@@ -71,19 +71,19 @@ class Spider(ThreadPool, OutputQueueMixin):
 
 
     def _fetch(self, url, http_client):
-        log.info("fetching %s" % url)
+#        log.info("fetching %s" % url)
 
         response, content = http_client.request(url, "GET")
 
         if response.fromcache and self._output_changed_only:
-            log.info("%s unchanged" % url)
+#            log.info("%s unchanged" % url)
             return
         
         if response.status == 200 or (response.status == 304 and not self._output_changed_only):
-            log.info("%s updated" % url)
+#            log.info("%s updated" % url)
             self.output_queue.put(SpiderResult(url, response, content))
-        else:
-            log.info("status of %s was %d" % (url, response.status))
+#        else:
+#            log.info("status of %s was %d" % (url, response.status))
  
     def _get_http_client(self):
         # currently this is implemented as a thread local
