@@ -1,5 +1,7 @@
 from httplib2 import Http as HttpBase
+import logging
 
+log = logging.getLogger(__name__)
 
 
 class NoKeepaliveHttp(HttpBase): 
@@ -14,10 +16,12 @@ class NoKeepaliveHttp(HttpBase):
     def request(self, *args, **kwargs):
         try:
             return HttpBase.request(self, *args, **kwargs) 
+        except Exception, e:
+            log.error("Error making request: %s" % str(e))
         finally:
             self._close_everything()
     
     def _close_everything(self):
-        for k, conn in self.connections.items():
-                conn.close()
+        for conn in self.connections.values():
+            conn.close()
         self.connections = {}
