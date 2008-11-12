@@ -18,6 +18,7 @@ class NoKeepaliveHttp(HttpBase):
             return HttpBase.request(self, *args, **kwargs) 
         except Exception, e:
             log.error("Error making request: %s" % str(e))
+            return None
         finally:
             self._close_everything()
     

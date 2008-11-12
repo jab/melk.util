@@ -73,7 +73,11 @@ class Spider(ThreadPool, OutputQueueMixin):
     def _fetch(self, url, http_client):
 #        log.info("fetching %s" % url)
 
-        response, content = http_client.request(url, "GET")
+        result = http_client.request(url, "GET")
+        if result is None: # there must have been an error
+            return
+
+        response, content = result
 
         if response.fromcache and self._output_changed_only:
 #            log.info("%s unchanged" % url)
