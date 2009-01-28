@@ -60,7 +60,7 @@ def is_melk_id(mid):
 
 def melk_id(iid, source=None):
     hash = md5()
-    hash.update(iid)
+    hash.update(iid.encode('utf-8'))
     if source is not None:
         hash.update(source)
 
