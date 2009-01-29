@@ -65,17 +65,6 @@ def json_sleep(ff):
     """
     returns unicode string with json dump of feed object
     """
-    # XXX see http://trac.openplans.org/melkjug/ticket/336
-    #     and http://trac.openplans.org/melkjug/ticket/240
-    try:
-        ff = ff.__subject__
-    except AttributeError:
-        pass
-    if 'content' in ff:
-        try:
-            ff['content'] = ff['content'].__subject__
-        except AttributeError:
-            pass
     return simplejson.dumps(ff).decode('utf-8')
 
 def json_wake(juni):
