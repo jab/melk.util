@@ -33,3 +33,20 @@ def test_opml_loop():
     assert len(out_feeds) == len(in_feeds)
     for url in in_feeds:
         assert url in out_feeds
+        
+def test_opml_loop_titles():
+    in_feeds = ["http://www.abc.com/def", 
+                "http://www.foo.bar.org/quux",
+                "http://example.org/feed"]
+
+    feed_titles = {}
+    feed_titles[in_feeds[0]] = 'Title 0'
+    feed_titles[in_feeds[1]] = 'Title 1'
+    # feed_titles[in_feeds[2]] = 'Title 2' NO TITLE
+
+    out_feeds = feeds_in_opml(dump_opml(in_feeds, feed_titles=feed_titles), titles=True)
+    
+    assert len(out_feeds) == len(in_feeds)
+    for url, title in out_feeds:
+        assert url in in_feeds
+        assert feed_titles.get(url, '') == title
