@@ -19,6 +19,8 @@
 
 import simplejson
 
+__all__ = ['Dibject', 'json_sleep', 'json_wake', 'dibjectify', 'deep_copy_dibject']
+
 class Dibject(dict):
     """
     A dibject is a dict that can access its keys through 
@@ -76,3 +78,6 @@ def json_wake(juni):
 
 def dibjectify(thinger):
     return json_wake(json_sleep(thinger))
+    
+def deep_copy_dibject(other_thinger):
+    return dibjectify(other_thinger)
