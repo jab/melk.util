@@ -38,10 +38,12 @@ class ThreadPool:
     processing.
     """
 
-    def __init__(self, poolsize=DEFAULT_POOLSIZE, 
+    def __init__(self, poolsize=None,
                  processor=None): 
         self.input_queue = Queue()
-
+        if poolsize is None:
+            poolsize = DEFAULT_POOLSIZE
+ 
         if processor is not None:
             self._do = processor
 
@@ -72,6 +74,9 @@ class ThreadPool:
             except:
                 log.error(traceback.format_exc())
 
+    def _do(self, job):
+        job()
+
 
 class DeferredCall(object): 
     """
@@ -90,7 +95,7 @@ class CallPool(ThreadPool):
     argument callables have been placed on the input_queue, 
     eg the DeferredCall above.
     """
-    def __init__(self, poolsize=DEFAULT_POOLSIZE):
+    def __init__(self, poolsize=None):
         ThreadPool.__init__(self, poolsize=poolsize)
 
     def _do(self, job):
