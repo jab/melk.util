@@ -22,7 +22,8 @@ import random
 import re
 import sha
 from struct import pack
-
+import logging 
+log = logging.getLogger(__name__)
 try:
     from hashlib import md5 # python2.5
 except ImportError:
@@ -66,8 +67,10 @@ def melk_id(iid, source=None):
 
     hex = hash.hexdigest()
     
-    return 'melk:%s-%s-%s-%s-%s' % (hex[0:8], hex[8:12], hex[12:16], 
+    mid = 'melk:%s-%s-%s-%s-%s' % (hex[0:8], hex[8:12], hex[12:16], 
                                     hex[16:20], hex[20:32])
+    log.debug("melk_id(%s, %s) -> %s" % (iid, source, mid))
+    return mid
 
 def main(): 
     import sys

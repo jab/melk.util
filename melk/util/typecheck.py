@@ -21,7 +21,7 @@ from types import *
 from UserDict import *
 from UserList import *
 
-__all__ = ['is_listy', 'is_dicty', 'is_atomic']
+__all__ = ['is_listy', 'is_dicty', 'is_atomic', 'asbool']
 
 LIST_TYPES = (ListType, TupleType, UserList)
 def is_listy(ob):
@@ -60,3 +60,13 @@ ATOMIC_BUILTIN_TYPES = (UnicodeType, StringType,
                         LongType, FloatType)
 def is_atomic(ob):
     return isinstance(ob, ATOMIC_BUILTIN_TYPES)
+
+
+def asbool(val):
+    if isinstance(val, basestring):
+        val = val.lower().strip()
+        if val in ['true', '1', 'yes', 'y']:
+            return True
+        if val in  ['false', '0', 'no', 'n']:
+            return False
+    return val
