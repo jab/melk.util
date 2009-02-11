@@ -1,3 +1,18 @@
+"""
+This module implements a few ways of searching for feeds. They look like this:
+
+>>> from melk.util import feedsearch
+>>> searcher = feedsearch.GoogleFeedSearchService()
+>>> rs = searcher.find_feeds("new york times")
+>>> rs[0]
+{'url': u'http://www.nytimes.com/services/xml/rss/nyt/HomePage.xml', 'link': u'http://www.nytimes.com/', 'title': u'The <b>New York Times</b> - Breaking News, World News &amp; Multimedia'}
+>>> searcher.is_feed(rs[0].url)
+True
+>>> searcher.is_feed(rs[0].link)
+False
+
+"""
+
 from formencode import Invalid
 from formencode.validators import URL
 from melk.util.dibject import Dibject, json_wake
@@ -65,7 +80,10 @@ class GoogleFeedSearchService(object):
     def _search_terms(self, query):
         rs = self._query(FIND_FEED, query)
         if rs is not None:
-            return rs.entries
+            return [Dibject(url=r["url"],
+                            title=r.get('title', ''),
+                            link=r.get('link', ''))
+                    for r in rs.entries]
         else:
             return []
 
@@ -74,9 +92,9 @@ class GoogleFeedSearchService(object):
         if rs is None:
             return None
 
-        return {"url": url,
-                "title": rs.feed.get('title', ''),
-                "link": rs.feed.get('link', '')}
+        return Dibject(url=url,
+                       title=rs.feed.get('title', ''),
+                       link=rs.feed.get('link', ''))
 
 
     def _search_url_any(self, url):
