@@ -31,11 +31,14 @@ LOAD_FEED  = "http://ajax.googleapis.com/ajax/services/feed/load?v=1.0&q="
 class GoogleFeedSearchService(object):
     """
     This class provides a simple feed searching service based on 
-    google APIs.  You can query by keywords, or whatev. It is a very 
-    fast path for common feeds, but not comprehensive. It returns
-    simple feed info of the form: 
+    google APIs.  You can query by keywords, urls of web pages linking
+    to feeds or direct urls to feeds.
     
-    [{"url": "<url of feed>", "title": "Title of Feed", "link": "Link to source"}, ...]
+    It is a very fast path for common feeds, but *not comprehensive*.
+    
+    If you want to support small-fry feeds that have not been discovered by google, 
+    consider chaining this together with the HandScrapedFeedSearchService as 
+    a fallback.
     """
 
     def __init__(self, service_key=None, http_cache=None):
@@ -151,7 +154,8 @@ class HandScrapedFeedSearchService(object):
     """
     This is a slow path hand scraper / checker feed search. It does not 
     handle keyword searches, only urls which it laboriously fetches and 
-    inspects.
+    inspects.  If there is a feed to be found, it will try pretty hard
+    (at the expense of time) to prove it.
     """
 
     def __init__(self, http_cache=None):
