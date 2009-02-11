@@ -29,7 +29,9 @@ setup(
     url="http://melkjug.openplans.org",
     install_requires=[
      "httplib2",
-     "simplejson<2.0"
+     "simplejson<2.0",
+     "FormEncode>=1.2",
+     "feedparser"
     ],
     dependency_links=[
       "https://svn.openplans.org/melk/eggs/links.html",
