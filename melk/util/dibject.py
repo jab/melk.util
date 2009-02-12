@@ -19,6 +19,8 @@
 
 from melk.util.typecheck import is_listy, is_dicty, is_atomic
 import simplejson
+import logging 
+log = logging.getLogger(__name__)
 
 __all__ = ['Dibject', 'json_sleep', 'json_wake', 'dibjectify', 'deep_copy_dibject']
 

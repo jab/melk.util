@@ -198,6 +198,9 @@ class HandScrapedFeedSearchService(object):
             ff, response, content = self._check_for_feed(url)
             if ff is not None:
                 return [ff]
+                
+            if response is None or content is None:
+                return []
 
             # dig feed links out...
             ct = get_content_type(response.get('content-type', '')).lower()
