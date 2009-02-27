@@ -20,14 +20,18 @@
 import base64
 import random
 import re
-import sha
 from struct import pack
 import logging 
 log = logging.getLogger(__name__)
 try:
-    from hashlib import md5 # python2.5
+    from hashlib import md5 # python > 2.4
 except ImportError:
-    from md5 import md5 # python 2.4
+    from md5 import md5 # python <= 2.4
+try:
+    from hashlib import sha1 as sha # python > 2.5
+except ImportError:
+    import sha # python <= 2.5
+
 
 __all__ = ['salty_hash', 'salty_hash_matches']
 
