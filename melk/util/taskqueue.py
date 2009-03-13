@@ -19,6 +19,7 @@
 
 import threading
 from Queue import Queue
+from peak.util.proxies import ObjectWrapper
 
 if hasattr(Queue, 'join'):
     TaskQueue = Queue
@@ -80,25 +81,27 @@ else:
             finally:
                 self.all_tasks_done.release()
 
-
-class QueueProxy: 
-    """
-    """
-    def __init__(self, queue): 
-        self._queue = queue
-
-    def __getattr__(self, name): 
-        return getattr(self._queue, name)
-
-class QueueInputAdapter(QueueProxy): 
+class QueueInputAdapter(ObjectWrapper): 
     """
     wraps a Queue and performs an arbitrary transformation
-    of inputs before pushing (on the pushing thread)
+    of inputs (on the pushing thread) before pushing onto
+    the wrapped queue.  if the item is None or the result of 
+    the transform is None, nothing is pushed on the queue.
     """
     def __init__(self, queue, input_adaptation=None):
-        self._transform = input_adaptation
+        if input_adaptation is not None:
+            self._transform = input_adaptation
+        self.__subject__ = queue
 
-    def _put(self, item):
+    def put(self, item):
+        if item is None:
+            return
+
         if self._transform is not None:
             item = self._transform(item)
-        return self._queue.put(item)
+
+        if item is not None:
+            return self.__subject__.put(item)
+
+    def _transform(self, item):
+        return item

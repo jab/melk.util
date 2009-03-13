@@ -3,7 +3,6 @@ import logging
 
 log = logging.getLogger(__name__)
 
-
 class NoKeepaliveHttp(HttpBase): 
     """
     this is an httplib2 http that does not 
@@ -16,9 +15,6 @@ class NoKeepaliveHttp(HttpBase):
     def request(self, *args, **kwargs):
         try:
             return HttpBase.request(self, *args, **kwargs) 
-        except Exception, e:
-            log.error("Error making request: %s" % str(e))
-            return None
         finally:
             self._close_everything()
     

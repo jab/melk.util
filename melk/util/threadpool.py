@@ -32,15 +32,28 @@ class ThreadPool:
     Simple threadpool that processes
     items placed in its input queue. 
 
-    implement the _do method or passed
-    as a single argument function 
-    to the constructor to specify the
-    processing.
+    implement the _do method or pass a single argument function 
+    to the constructor to specify the processing of jobs
+    placed on the input queue.
+    
+    By default it is assumed that jobs are 0 argument callables,
+    a job is processed by calling it.
     """
 
     def __init__(self, poolsize=None,
-                 processor=None): 
+                 processor=None,
+                 output_queue=None):
+        """
+        poolsize - the number of threads to use to process jobs, defaults to 10
+        processor - an optional 1 argument function which is used to process jobs
+                    placed on the input queue. If none is specified, jobs are assumed
+                    to be zero argument callables.
+        output_queue - if specified, the return value of proccessing a job will be placed
+                       on this output queue.
+        """
         self.input_queue = Queue()
+        self.output_queue = output_queue
+
         if poolsize is None:
             poolsize = DEFAULT_POOLSIZE
  
@@ -68,14 +81,16 @@ class ThreadPool:
             try:
                 job = self.input_queue.get()
                 try:
-                    self._do(job)
+                    rc = self._do(job)
+                    if self.output_queue is not None:
+                        self.output_queue.put(rc)
                 finally:
                     self.input_queue.task_done()
             except:
                 log.error(traceback.format_exc())
 
     def _do(self, job):
-        job()
+        return job()
 
 
 class DeferredCall(object): 
@@ -88,27 +103,61 @@ class DeferredCall(object):
 
     def __call__(self):
         self.call(*self.args, **self.kwargs)
-        
-class CallPool(ThreadPool):
-    """
-    This is a ThreadPool which assumes that 0 
-    argument callables have been placed on the input_queue, 
-    eg the DeferredCall above.
-    """
-    def __init__(self, poolsize=None):
-        ThreadPool.__init__(self, poolsize=poolsize)
 
-    def _do(self, job):
-        job()
-
-
-class OutputQueueMixin(object): 
+class ThreadPoolChain(object):
     """
-    just a simple mixin to add an 
-    ouput queue to a ThreadPool subclass
+    Simple helper for assembling and managing a chain of threadpools linked
+    together by shared output/input queues.  Will not function property without
+    at least one threadpool added.
+    
+    use as a normal threadpool: 
+    add jobs to input_queue, start, join, receive output via output_queue 
+    
+    Should not be modified / appended to once it has been started or linked
+    in with other chains.
+    
+
     """
-    def __init__(self, output_queue): 
-        if output_queue is None:
-            self.output_queue = Queue()
+
+    def __init__(self):
+        self._chain = []
+        self.input_queue = None
+
+    def append(self, threadpool, in_queue=None):
+        """
+        links threadpool to the end of the chain.  The output queue of the last
+        threadpool added to the chain is set to the input queue of the given 
+        threadpool. 
+ 
+        threadpool - the threadpool to add to the chain
+        in_queue - optional adapted version of the input queue of the threadpool,
+        if not specified, threadpool.input_queue is used.
+        """
+        if in_queue is None:
+            in_queue = threadpool.input_queue
+
+        if len(self._chain) > 0:
+            self._chain[-1].output_queue = in_queue
         else:
-            self.output_queue = output_queue
+            self.input_queue = in_queue
+
+        self._chain.append(threadpool)
+        
+    def _get_output_queue(self):
+        if len(self._chain) > 0:
+            return self._chain[-1].output_queue
+        else:
+            return None
+
+    def _set_output_queue(self, val):
+        self._chain[-1].output_queue = val
+
+    output_queue = property(_get_output_queue, _set_output_queue)
+    
+    def start(self):
+        for tp in self._chain:
+            tp.start()
+
+    def join(self):
+        for tp in self._chain:
+            tp.join()
