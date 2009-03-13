@@ -28,9 +28,9 @@ try:
 except ImportError:
     from md5 import md5 # python <= 2.4
 try:
-    from hashlib import sha1 as sha # python > 2.5
+    from hashlib import sha1 # python > 2.5
 except ImportError:
-    import sha # python <= 2.5
+    from sha import new as sha1 # python <= 2.5
 
 
 __all__ = ['salty_hash', 'salty_hash_matches']
@@ -45,7 +45,7 @@ def salty_hash(input, salt=None):
         salt = pack('L', random.getrandbits(32))
         salt = base64.b64encode(salt)
 
-    hasher = sha.new()
+    hasher = sha1()
     hasher.update(salt)
     hasher.update(input)
     return '%s:%s' % (salt, base64.b64encode(hasher.digest()))
