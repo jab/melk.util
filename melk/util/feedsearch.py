@@ -16,7 +16,7 @@ False
 from formencode import Invalid
 from formencode.validators import URL
 from melk.util.dibject import Dibject, json_wake
-from melk.util.http import NoKeepaliveHttp as Http
+from melk.util.http import NoKeepaliveHttp as Http, ForbiddenUrlError
 import urllib
 import traceback
 
@@ -196,6 +196,7 @@ class HandScrapedFeedSearchService(object):
         try:
             # check to see if the URL points to a feed
             ff, response, content = self._check_for_feed(url)
+                
             if ff is not None:
                 return [ff]
                 
@@ -217,6 +218,9 @@ class HandScrapedFeedSearchService(object):
                         if ff is not None:
                             feeds.append(ff)
             return feeds
+        except ForbiddenUrlError, e:
+            log.warn(e)
+            return []
         except:
             log.error("Error locating feeds in %s:\n%s" % (url, traceback.format_exc()))
             return feeds
