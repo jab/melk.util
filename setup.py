@@ -29,7 +29,7 @@ setup(
     url="http://melkjug.openplans.org",
     install_requires=[
      "httplib2",
-     "simplejson<2.0",
+     "simplejson",
      "FormEncode>=1.2",
      "feedparser"
     ],
