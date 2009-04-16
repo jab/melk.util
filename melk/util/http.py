@@ -5,26 +5,31 @@ import logging
 
 log = logging.getLogger(__name__)
 
-class ForbiddenUrlError(Exception):
+class ForbiddenHost(Exception):
     """
     raised when e.g. trying to fetch a resource from a forbidden host
     """
     pass
 
+# XXX this should be renamed as it has added more functionality
 class NoKeepaliveHttp(HttpBase): 
     """
-    this is an httplib2 http that does not 
-    keep connections dangling around
+    This is an httplib2 http that does not keep connections dangling around.
+    Its constructor also accepts a 'blacklist' kwarg in which a list of
+    blacklisted hosts can be passed.
     """
 
     def __init__(self, *args, **kwargs):
+        self.blacklist = kwargs.pop('blacklist', ())
         HttpBase.__init__(self, *args, **kwargs)
 
     def request(self, *args, **kwargs):
-        url = args[0]
-        hostname = urlparse(url).hostname
-        if gethostbyname(hostname) == gethostbyname('localhost'):
-            raise ForbiddenUrlError('requests to localhost are forbidden: %s' % url)
+        if self.blacklist:
+            uri = args[0]
+            ip = gethostbyname(urlparse(uri).hostname)
+            for badhost in self.blacklist:
+                if gethostbyname(badhost) == ip:
+                    raise ForbiddenHost('requests to %s are forbidden: %s' % (badhost, uri))
 
         try:
             return HttpBase.request(self, *args, **kwargs) 

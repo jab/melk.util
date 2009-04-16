@@ -16,7 +16,7 @@ False
 from formencode import Invalid
 from formencode.validators import URL
 from melk.util.dibject import Dibject, json_wake
-from melk.util.http import NoKeepaliveHttp as Http, ForbiddenUrlError
+from melk.util.http import NoKeepaliveHttp as Http, ForbiddenHost
 import urllib
 import traceback
 
@@ -27,6 +27,11 @@ __all__ = ['GoogleFeedSearchService', 'HandScrapedFeedSearchService', 'ChainedFe
 
 FIND_FEED  = "http://ajax.googleapis.com/ajax/services/feed/find?v=1.0&q="
 LOAD_FEED  = "http://ajax.googleapis.com/ajax/services/feed/load?v=1.0&q="
+
+DEFAULT_HTTP_ARGS = {
+    'timeout': 5,
+    'blacklist': ('localhost',),
+}
 
 class GoogleFeedSearchService(object):
     """
@@ -45,7 +50,7 @@ class GoogleFeedSearchService(object):
         self._service_key = service_key
         self._http_cache = http_cache
         self._as_url = URL(add_http=True)
-        self._http_client = Http(cache=self._http_cache, timeout=5)
+        self._http_client = Http(cache=self._http_cache, **DEFAULT_HTTP_ARGS)
 
     def find_feeds(self, query, max_results=5):
         try:
@@ -161,7 +166,7 @@ class HandScrapedFeedSearchService(object):
     def __init__(self, http_cache=None):
         self._http_cache = http_cache
         self._as_url = URL(add_http=True)
-        self._http_client = Http(cache=self._http_cache, timeout=5)
+        self._http_client = Http(cache=self._http_cache, **DEFAULT_HTTP_ARGS)
         
     def find_feeds(self, query, max_results=5):
         try:
@@ -218,7 +223,7 @@ class HandScrapedFeedSearchService(object):
                         if ff is not None:
                             feeds.append(ff)
             return feeds
-        except ForbiddenUrlError, e:
+        except ForbiddenHost, e:
             log.warn(e)
             return []
         except:

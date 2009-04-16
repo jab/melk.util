@@ -85,7 +85,7 @@ class Spider(ThreadPool):
         return DefaultHttp(cache=self._cache)
 
 DEFAULT_HTTP_ARGS = {
-    'timeout': 15
+    'timeout': 15,
 }
 
 def DefaultHttp(**kw):
