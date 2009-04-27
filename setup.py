@@ -31,7 +31,8 @@ setup(
      "httplib2",
      "simplejson",
      "FormEncode>=1.2",
-     "feedparser"
+     "feedparser",
+     "ProxyTypes"
     ],
     dependency_links=[
       "https://svn.openplans.org/melk/eggs/links.html",
