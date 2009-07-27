@@ -28,15 +28,15 @@ log = logging.getLogger(__name__)
 
 class UserClusterJob(object):
     """
-    Performs locality-sensitive hashing with the given hash_family, k, and L
+    Performs locality-sensitive hashing with the given hashfamily, k, and L
     parameters to cluster users based on similar starred items.
     """
-    def __init__(self, model, hash_family, k, L):
+    def __init__(self, model, hashfamily, k, L):
         self.model = model
-        self.hash_family = hash_family
+        self.hashfamily = hashfamily
         self.k = k
         self.L = L
-        self.seeds = hash_family.seeds(k, L)
+        self.seeds = hashfamily.seeds(k, L)
 
     def __call__(self):
         log.info('user clustering...')
@@ -47,7 +47,7 @@ class UserClusterJob(object):
                 log.debug('processing users/%s' % user.uri)
                 user.clear_clusters()
                 starred = [item.uri for item in user.starred.iter_latest()]
-                for cluster in lsh(starred, self.hash_family, self.k, self.L, self.seeds):
+                for cluster in lsh(starred, self.hashfamily, self.k, self.L, self.seeds):
                     user.add_cluster(cluster)
                 user.put()
         finally:
