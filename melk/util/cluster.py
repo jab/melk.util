@@ -20,7 +20,7 @@
 import logging 
 import threading
 from threading import Thread 
-from melk.selection.lsh import lsh
+from melk.selection.lsh import lsh, jaccard
 import traceback 
 
 log = logging.getLogger(__name__)
@@ -44,7 +44,7 @@ class UserClusterJob(object):
             for user in self.model.all_users():
                 if not user.has_role('member'):
                     continue
-                log.debug('processing users/%s' % user.uri)
+                log.debug('clustering users/%s' % user.uri)
                 user.clear_clusters()
                 starred = [item.uri for item in user.starred.iter_latest()]
                 for cluster in lsh(starred, self.hashfamily, self.k, self.L, self.seeds):
@@ -52,4 +52,20 @@ class UserClusterJob(object):
                 user.put()
         finally:
             log.info('finished user clustering')
+            self.model.session_complete()
+
+        log.info('computing neighbor similarities...')
+        try:
+            for u in self.model.all_users():
+                if not u.has_role('member'):
+                    continue
+                log.debug('computing neighbor similarities for users/%s' % u.uri)
+                # XXX possibly cap after a certain number and/or date
+                ustarred = set([i.uri for i in u.starred.iter_latest()])
+                for n in self.model.iter_neighbors(user):
+                    nstarred = [i.uri for i in n.starred.iter_latest()]
+                    sim = jaccard(ustarred, nstarred)
+                    self.model.set_user_similarity(u, n, sim)
+        finally:
+            log.info('finished computing neighbor similarities...')
             self.model.session_complete()
