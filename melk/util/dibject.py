@@ -17,8 +17,10 @@
 # Boston, MA  02110-1301
 # USA
 
+from copy import copy
 from melk.util.typecheck import is_listy, is_dicty, is_atomic
 import simplejson
+from types import StringType, UnicodeType, FloatType, LongType, IntType
 import logging 
 log = logging.getLogger(__name__)
 
@@ -89,7 +91,8 @@ def dibjectify(ob):
     try:
         return _dibjectify(ob)
     except:
-        log.debug('Skipping %s' % ob)
+        import traceback
+        log.debug('Skipping "%s" of type %s: %s' % (ob, ob.__class__, traceback.format_exc()))
         return None
 
 def _dibjectify(ob):
@@ -106,14 +109,27 @@ def _dibjectify(ob):
         return None
 
     if is_atomic(ob):
-        return ob
+        if isinstance(ob, UnicodeType):
+            return UnicodeType(ob)
+        elif isinstance(ob, StringType):
+            return StringType(ob)
+        elif isinstance(ob, IntType):
+            return IntType(ob)
+        elif isinstance(ob, FloatType):
+            return FloatType(ob)
+        elif isinstance(ob, LongType):
+            return LongType(ob)
+        else:
+            log.debug('Skipping "%s" of atomic type %s' % (ob, ob.__class__))
+            return None
 
     elif is_dicty(ob):
         d = Dibject()
         for (k, v) in ob.items():
+            fk = dibjectify(k)
             fv = dibjectify(v)
-            if fv is not None:
-                d[k] = fv
+            if fv is not None and fk is not None:
+                d[fk] = fv
         return d
 
     elif is_listy(ob):
@@ -125,7 +141,7 @@ def _dibjectify(ob):
         return l
 
     else:
-        log.debug('Skipping %s' % ob)
+        log.debug('Skipping "%s" of unserializable type %s' % (ob, ob.__class__))
         return None
 
 # maybe better since it's in C... ?
@@ -134,3 +150,5 @@ def _dibjectify(ob):
     
 def deep_copy_dibject(other_thinger):
     return dibjectify(other_thinger)
+
+

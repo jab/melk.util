@@ -27,31 +27,15 @@ LIST_TYPES = (ListType, TupleType, UserList)
 def is_listy(ob):
     if isinstance(ob, LIST_TYPES):
         return True
-        
-    if is_atomic(ob):
+    else:
         return False
 
-    # otherwise listen for quacks
-    try: 
-        iter(ob)
-    except TypeError:
-        return False
-    
-    try:
-        ob[0:0]
-        # it's iterable and sliceable...
-        return True
-    except TypeError:
-        return False
-    
+
 DICT_TYPES = (DictType, UserDict, DictMixin)
 def is_dicty(ob):
     if isinstance(ob, DICT_TYPES):
         return True
-    
-    # otherwise listen for quacks
-    # XXX...
-    
+
     return False
     
 
