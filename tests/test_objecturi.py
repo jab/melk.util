@@ -44,10 +44,15 @@ def test_embedded_url():
     
     
 def test_nonascii():
-    uris = ['http://www.foo.bar.org?def=%c09&abc=%94%96%c03',
-            'http://www.foo.bar.org?def=%c09&abc=%94%96%c03&def=somethingelse',
-            u'http://www.foo.bar.org?def=%c09&abc=%94%96%c03',
-            u'http://www.foo.bar.org?def=%c09&abc=%94%96%c03&def=somethingelse']
+    
+    base = 'http://www.foo.bar.org/obs'
+    args = {
+        'abc' : u'\x94\x96\xc0',
+        'def' : u'\x94\x96\xc0'.encode('utf-8'),
+        u'\x96' : 'something else',
+        u'\x96'.encode('utf-8') : 'foo'
+    }
 
-    for uri in uris:
-        basic_check_uri(uri)
+    uri = make_u(base, args)
+    basic_check_uri(uri)
+    basic_check_uri(unicode(uri))
