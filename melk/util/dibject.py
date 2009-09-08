@@ -60,7 +60,7 @@ class Dibject(dict):
             assert not key.startswith('_')
             return self.__getitem__(key)
         except:
-            raise AttributeError, "object has ot attribute '%s'" % key
+            raise AttributeError, "object has no attribute '%s'" % key
 
     def __setattr__(self, key, value):
         if key.startswith('_'):
