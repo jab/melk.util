@@ -20,14 +20,30 @@
 from types import *
 from UserDict import *
 from UserList import *
+from xml.sax._exceptions import SAXException
 
 __all__ = ['is_listy', 'is_dicty', 'is_atomic', 'asbool']
 
 LIST_TYPES = (ListType, TupleType, UserList)
+EVIL_LISTOID_TYPES = (SAXException, )
 def is_listy(ob):
     if isinstance(ob, LIST_TYPES):
         return True
-    else:
+    
+    if is_atomic(ob) or isinstance(ob, EVIL_LISTOID_TYPES): 
+        return False 
+  
+    # otherwise listen for quacks 
+    try:  
+        iter(ob) 
+    except TypeError: 
+        return False 
+
+    try:
+        ob[0:0] 
+        # it's iterable and sliceable...
+        return True 
+    except TypeError: 
         return False
 
 
