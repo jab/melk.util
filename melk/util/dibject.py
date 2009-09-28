@@ -62,6 +62,7 @@ class Dibject(dict):
         except:
             raise AttributeError, "object has no attribute '%s'" % key
 
+
     def __setattr__(self, key, value):
         if key.startswith('_'):
             self.__dict__[key] = value
@@ -152,3 +153,285 @@ def deep_copy_dibject(other_thinger):
     return dibjectify(other_thinger)
 
 
+class DibWrap(dict):
+    """
+    This is like a Dibject but instead it 
+    wraps a given dictionary from another 
+    source.  It will recursively wrap 
+    inner dictionaries to provide 
+    attribute access.
+    
+    if the underlying dictionary is changed, 
+    so is the dibwrap's value of that attribute:
+    
+    >>> from melk.util.dibject import DibWrap
+    >>> d = dict(foo='bar')
+    >>> dw = DibWrap(d)
+    >>> dw.foo
+    'bar'
+    >>> d['foo'] = 'twelve'
+    >>> dw.foo
+    'twelve'
+    
+    this also works with sub-dictionaries:
+    >>> from melk.util.dibject import DibWrap
+    >>> d = {'foo': {'bar': 'quux'}}
+    >>> dw = DibWrap(d)
+    >>> dw.foo.bar
+    'quux'
+    
+    and even sub-dictionaries inside lists...
+    >>> from melk.util.dibject import DibWrap
+    >>> d = {'foo': [{'bar': 'quux'}, {'zoom': 'blip'}]}
+    >>> dw = DibWrap(d)
+    >>> dw.foo[0].bar
+    'quux'
+    >>> dw.foo[1].zoom
+    'blip'
+    
+    etc.
+    """
+    
+    def __init__(self, wdict):
+        self._data = wdict
+
+    # attribute access...
+
+    def __getattr__(self, key):
+        try:
+            return self.__dict__[key]
+        except KeyError:
+            pass
+
+        try:
+            assert not key.startswith('_')
+            return self.__getitem__(key)
+        except:
+            raise AttributeError("%s instance has no attribute '%s'" % (self.__class__.__name__, key))
+
+
+    def __setattr__(self, key, value):
+        if key.startswith('_'):
+            self.__dict__[key] = value
+        else:
+            return self.__setitem__(key, value)
+
+    ##################################################
+    # dict proxy...
+    def __cmp__(self, other):
+        return self._data.__cmp__(other)
+
+    def __contains__(self, item):
+        return self._data.__contains__(item)
+
+    # def __delattr__(self, name):
+
+    def __delitem__(self, key):
+        return self._data.__delitem__(key)
+
+    def __eq__(self, other):
+        return self._data.__eq__(other)
+
+    def __ge__(self, other):
+        return self._data.__ge__(other)
+
+    # def __getattribute__(self, name):
+
+    def __getitem__(self, key):
+        return self.wrap(self._data.__getitem__(key))
+        
+    def __gt__(self, other):
+        return self._data.__gt__(other)
+
+    # def __hash__(self):
+
+    def __iter__(self):
+        return self._data.__iter__()
+
+    def __le__(self, other):
+        return self._data.__le__(other)
+
+    def __len__(self):
+        return self._data.__len__()
+
+    def __lt__(self, other):
+        return self._data.__lt__(other)
+
+    def __ne__(self, other):
+        return self._data.__ne__(other)
+
+    # def __reduce__(self):
+    # def __reduce_ex__(self):
+
+    def __repr__(self):
+        return self._data.__repr__()
+
+    # def __setattr__(self, name, value)
+
+    def __setitem__(self, key, value):
+        self._data.__setitem__(key, value)
+
+    def __str__(self):
+        return str(self._data)
+
+    def __unicode__(self):
+        return unicode(self._data)
+
+    def clear(self):
+        return self._data.clear()
+
+    # def copy():
+
+    @classmethod
+    def fromkeys(cls, seq, value=None):
+        return DibWrap(dict.fromkeys(seq, value=value))
+
+    def get(self, key, default=None):
+        try:
+            return self[key]
+        except KeyError:
+            return default
+
+    def has_key(self, key):
+        return self._data.has_key(key)
+
+    def items(self):
+        return list(self.iteritems())
+
+    def iteritems(self):
+        for (k, v) in self._data.iteritems():
+            yield (k, self.wrap(v))
+
+    def iterkeys(self):
+        return self._data.iterkeys()
+
+    def itervalues(self):
+        for v in self._data.itervalues():
+            yield self.wrap(v)
+
+    def keys(self):
+        return list(self.iterkeys())
+
+    def pop(self, *args):
+        if len(args) == 0:
+            raise TypeError('pop expected at least 1 arguments, got 0')
+        if len(args) > 2:
+            raise TypeError('pop expected at most 2 arguments, got %d' % len(args))
+
+
+        try:
+            popkey = args[0]
+            return self.wrap(self._data.pop(popkey))
+        except KeyError:
+            if len(args) == 1:
+                raise
+            else:
+                return args[1]
+
+    def popitem(self):
+        k, v = self._data.popitem()
+        return (k, self.wrap(v))
+
+    def setdefault(self, key, default=None):
+        return self._data.setdefault(key, default=default)
+
+    def update(self, other):
+        return self._data.update(other)
+
+    def values(self):
+        return [self.wrap(v) for v in self._data.values()]
+
+    @classmethod
+    def wrap(self, val):
+        if is_atomic(val):
+            return val
+        elif is_listy(val):
+            return DibListProxy(val)
+        elif is_dicty(val):
+          return DibWrap(val)
+        else:
+            return val
+
+    def unwrap(self):
+        return _data
+        
+
+class DibListProxy(list):
+    """
+    this is a list proxy that wraps any dicts
+    inside itself with DibWraps
+    """
+    def __init__(self, list):
+        self._data = list
+
+    def __lt__(self, other):
+        return self._data < other
+
+    def __le__(self, other):
+        return self._data <= other
+
+    def __eq__(self, other):
+        return self._data == other
+
+    def __ne__(self, other):
+        return self._data != other
+
+    def __gt__(self, other):
+        return self._data > other
+
+    def __ge__(self, other):
+        return self._data >= other
+
+    def __repr__(self):
+        return repr(self._data)
+
+    def __str__(self):
+        return str(self._data)
+
+    def __unicode__(self):
+        return unicode(self._data)
+
+    def __delitem__(self, index):
+        del self._data[index]
+
+    def __getitem__(self, index):
+        return DibWrap.wrap(self._data[index])
+
+    def __setitem__(self, index, value):
+        self._data[index] = value
+
+    def __contains__(self, value):
+        return value in self._data
+
+    def __iter__(self):
+        for index in range(len(self)):
+            yield self[index]
+
+    def __len__(self):
+        return len(self._data)
+
+    def __nonzero__(self):
+        return bool(self._data)
+
+    def append(self, *args, **kwargs):
+        return self._data.append(*args, **kwargs)
+
+    def count(self, value):
+        return self._data.count(value)
+
+    def extend(self, list):
+        for item in list:
+            self.append(item)
+
+    def index(self, value):
+        return self._data.index(value)
+
+    def insert(self, idx, *args, **kwargs):
+        return self._data.insert(idx, *args, **kwargs)
+
+    def remove(self, value):
+        return self._data.remove(value)
+        
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod()
