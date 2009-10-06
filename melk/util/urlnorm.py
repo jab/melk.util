@@ -1,6 +1,6 @@
 import re
 from urllib import quote_plus, unquote_plus, urlencode
-from urlparse import urlsplit, urlunsplit
+from urlparse import urlparse, urlsplit, urlunsplit
 
 try:
     # python 2.6
@@ -8,6 +8,7 @@ try:
 except ImportError:
     from cgi import parse_qsl
     
+__all__ = ['canonical_url', 'is_http_url', 'is_host', 'remove_dot_segments']
 
 def canonical_url(url):
     """
@@ -164,6 +165,53 @@ def remove_dot_segments(path):
 
     return ''.join(outp)
     
+    
+HOSTADDR_PAT = re.compile('^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})(:\d{1,5})?$')
+HOSTNAME_PAT = re.compile('^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*(:\d{1,5})?$')
+def is_host(thinger):
+    match = HOSTADDR_PAT.match(thinger)
+    if match:
+        gps = match.groups()
+        for i in range(0, 4):
+            digits = int(gps[i])
+            if digits > 255:
+                return False
+    else:
+        match = HOSTNAME_PAT.match(thinger)
+
+    if match is None:
+        return False
+
+    if ':' in thinger:
+        host, port = thinger.split(':')
+        port = int(port)
+    else:
+        host = thinger
+        port = 0
+
+    if len(host) > 255 or port > 65535 or port < 0:
+        return False
+
+    return True
+
+def is_http_url(thinger):
+    """
+    returns True if the value provided looks like a legit http url.
+    """
+    parts = urlparse(thinger)
+    if not (parts[0] == 'http' or parts[0] == 'https'):
+        return False
+
+    # no host name
+    if not parts[1]:
+        return False
+
+    host = parts[1]
+    if not is_host(host):
+        return False
+
+    return True
+
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
