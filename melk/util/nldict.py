@@ -144,9 +144,6 @@ class NLDict(dict, MutableMapping):
         del self._heap[:]
         dict.clear(self)
 
-    def __iter__(self):
-        return dict.__iter__(self)
-
     def __setitem__(self, key, value):
         cmpval = self._sortkey(value) if self._sortkey else value
         heapitem = (cmpval, key)
@@ -178,6 +175,8 @@ class NLDict(dict, MutableMapping):
         return key, value
 
     poplast = popitem
+
+    __iter__ = dict.__iter__
 
     # Methods with indirect access via the above methods
 
