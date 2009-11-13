@@ -166,7 +166,7 @@ class NLDict(dict, MutableMapping):
         self._heap.remove(heapitem)
         heapify(self._heap)
 
-    def popitem(self):
+    def popsmallest(self):
         if not self:
             raise KeyError
         removed = heappop(self._heap)
@@ -174,7 +174,7 @@ class NLDict(dict, MutableMapping):
         value = dict.pop(self, key)
         return key, value
 
-    popsmallest = popitem
+    popitem = popsmallest
 
     __iter__ = dict.__iter__
 
