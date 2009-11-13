@@ -7,8 +7,8 @@ from heapq import heapify, heappop, heappush, heapreplace
 class NLDict(dict, MutableMapping):
     """
     Mapping type that stores only the n largest elements according to an
-    arbitrary comparison function ``keyfunc`` (pass ``None`` to compare
-    objects directly). A larger item kicks the smallest one out when
+    arbitrary comparison function ``sortkey`` (pass ``None`` to compare
+    elements directly). A larger item kicks the smallest one out when
     inserted once the mapping reaches capacity.
 
         >>> from datetime import datetime, timedelta
@@ -122,10 +122,10 @@ class NLDict(dict, MutableMapping):
 
     """
 
-    def __init__(self, maxlen, keyfunc, *args, **kwds):
+    def __init__(self, maxlen, sortkey, *args, **kwds):
         self._heap = []
         self._maxlen = maxlen
-        self._keyfunc = keyfunc
+        self._sortkey = sortkey
         if args or kwds:
             self.update(*args, **kwds)
 
@@ -148,7 +148,7 @@ class NLDict(dict, MutableMapping):
         return dict.__iter__(self)
 
     def __setitem__(self, key, value):
-        cmpval = self._keyfunc(value) if self._keyfunc else value
+        cmpval = self._sortkey(value) if self._sortkey else value
         heapitem = (cmpval, key)
         if len(self) < self._maxlen:
             heappush(self._heap, heapitem)
@@ -164,7 +164,7 @@ class NLDict(dict, MutableMapping):
         to delete and then reheapify
         """
         value = dict.pop(self, key)
-        cmpval = self._keyfunc(value) if self._keyfunc else value
+        cmpval = self._sortkey(value) if self._sortkey else value
         heapitem = (cmpval, key)
         self._heap.remove(heapitem)
         heapify(self._heap)
@@ -193,17 +193,17 @@ class NLDict(dict, MutableMapping):
         return '%s(maxlen=%d, {%s})' % (self.__class__.__name__, self._maxlen, pairs)
 
     @classmethod
-    def fromkeys(cls, maxlen, keyfunc, iterable, value=None):
-        d = cls(maxlen, keyfunc)
+    def fromkeys(cls, maxlen, sortkey, iterable, value=None):
+        d = cls(maxlen, sortkey)
         for key in iterable:
             d[key] = value
         return d
 
 
-def maybe_nldict(maxlen=None, keyfunc=None, *args, **kwds):
+def maybe_nldict(maxlen=None, sortkey=None, *args, **kwds):
     if maxlen is None:
         return dict(*args, **kwds)
-    return NLDict(maxlen, keyfunc, *args, **kwds)
+    return NLDict(maxlen, sortkey, *args, **kwds)
 
 
 if __name__ == '__main__':
