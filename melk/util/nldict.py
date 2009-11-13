@@ -154,8 +154,8 @@ class NLDict(dict, MutableMapping):
             heappush(self._heap, heapitem)
             dict.__setitem__(self, key, value)
         elif heapitem[0] > self._heap[0][0]:
-            oldest = heapreplace(self._heap, heapitem)
-            dict.__delitem__(self, oldest[1])
+            removed = heapreplace(self._heap, heapitem)
+            dict.__delitem__(self, removed[1])
             dict.__setitem__(self, key, value)
 
     def __delitem__(self, key):
@@ -168,8 +168,8 @@ class NLDict(dict, MutableMapping):
     def popitem(self):
         if not self:
             raise KeyError
-        oldest = heappop(self._heap)
-        key = oldest[1]
+        removed = heappop(self._heap)
+        key = removed[1]
         value = dict.pop(self, key)
         return key, value
 
