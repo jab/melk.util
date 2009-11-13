@@ -148,8 +148,8 @@ class NLDict(dict, MutableMapping):
         return dict.__iter__(self)
 
     def __setitem__(self, key, value):
-        tocompare = self._keyfunc(value) if self._keyfunc else value
-        heapitem = (tocompare, key, value)
+        cmpval = self._keyfunc(value) if self._keyfunc else value
+        heapitem = (cmpval, key)
         if len(self) < self._maxlen:
             heappush(self._heap, heapitem)
             dict.__setitem__(self, key, value)
@@ -160,8 +160,8 @@ class NLDict(dict, MutableMapping):
 
     def __delitem__(self, key):
         value = dict.__getitem__(self, key)
-        tocompare = self._keyfunc(value) if self._keyfunc else value
-        heapitem = (tocompare, key, value)
+        cmpval = self._keyfunc(value) if self._keyfunc else value
+        heapitem = (cmpval, key)
         self._heap.remove(heapitem)
         dict.__delitem__(self, key)
 
