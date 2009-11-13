@@ -1,5 +1,5 @@
 from collections import MutableMapping
-from heapq import heappop, heappush, heapreplace
+from heapq import heapify, heappop, heappush, heapreplace
 
 
 # based on OrderedDict recipe for Python >= 2.6:
@@ -159,11 +159,15 @@ class NLDict(dict, MutableMapping):
             dict.__setitem__(self, key, value)
 
     def __delitem__(self, key):
-        value = dict.__getitem__(self, key)
+        """
+        This is not O(1) because we have to traverse the heap to find the item
+        to delete and then reheapify
+        """
+        value = dict.pop(self, key)
         cmpval = self._keyfunc(value) if self._keyfunc else value
         heapitem = (cmpval, key)
         self._heap.remove(heapitem)
-        dict.__delitem__(self, key)
+        heapify(self._heap)
 
     def popitem(self):
         if not self:
