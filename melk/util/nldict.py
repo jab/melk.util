@@ -97,7 +97,7 @@ class NLDict(dict, MutableMapping):
         12
         >>> largest4['twelve']
         12
-        >>> largest4.poplast()
+        >>> largest4.popsmallest()
         ('twelve', 12)
         >>> del largest4['sixteen']
         >>> len(largest4)
@@ -136,7 +136,7 @@ class NLDict(dict, MutableMapping):
         self._maxlen = value
         nover = max(0, len(self) - value)
         for i in xrange(nover):
-            self.poplast()
+            self.popsmallest()
 
     maxlen = property(_maxlen_get, _maxlen_set)
 
@@ -174,7 +174,7 @@ class NLDict(dict, MutableMapping):
         value = dict.pop(self, key)
         return key, value
 
-    poplast = popitem
+    popsmallest = popitem
 
     __iter__ = dict.__iter__
 
