@@ -123,6 +123,25 @@ class NLDict(dict, MutableMapping):
     """
 
     def __init__(self, maxlen, sortkey, *args, **kwds):
+        """
+        :param maxlen: the maximum number of elements to contain before smallest
+            elements start falling off the end; must be at least 1
+        :param sortkey: function to call on contained elements to determine
+            their ordering, e.g. operator.attrgetter('timestamp'); pass ``None``
+            to compare contained elements directly
+
+        Additional positional or keyword arguments are passed to :attr:`update`.
+
+        :raises: :exc:`ValueError` if :attr:`maxlen` <= 0 or :attr:`sortkey` is
+            neither ``None`` nor a callable
+        :raises: any exception raised by the :attr:`update` call, e.g.
+            :exc:`TypeError` if more than one positional argument was given via
+            *args
+        """
+        if maxlen <= 0:
+            raise ValueError('maxlen must be at least 1')
+        if sortkey is not None and not hasattr(sortkey, '__call__'):
+            raise ValueError('sortkey must be either None or a callable')
         self._heap = []
         self._maxlen = maxlen
         self._sortkey = sortkey
