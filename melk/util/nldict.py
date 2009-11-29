@@ -8,8 +8,8 @@ class NLDict(dict, MutableMapping):
     """
     Mapping type that stores only the n largest elements according to an
     arbitrary comparison function ``sortkey`` (pass ``None`` to compare
-    elements directly). A larger item kicks the smallest one out when
-    inserted once the mapping reaches capacity.
+    elements directly). Once the mapping reaches capacity, a larger item
+    kicks the smallest one out when inserted.
 
         >>> from datetime import datetime, timedelta
         >>> from operator import attrgetter
