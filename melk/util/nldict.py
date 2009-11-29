@@ -5,7 +5,7 @@ from itertools import izip, repeat
 
 # based on OrderedDict recipe for Python >= 2.6:
 # http://code.activestate.com/recipes/576669/
-class NLDict(dict, MutableMapping):
+class nldict(dict, MutableMapping):
     """
     Mapping type that stores only the n largest elements according to an
     arbitrary comparison function ``sortkey`` (pass ``None`` to compare
@@ -23,7 +23,7 @@ class NLDict(dict, MutableMapping):
         >>> ilastweek = NewsItem('lw', now - timedelta(days=7))
         >>> ilastmonth = NewsItem('lm', now - timedelta(days=31))
         >>> ilastyear = NewsItem('ly', now - timedelta(days=365))
-        >>> mostrecent = NLDict(2, attrgetter('timestamp'))
+        >>> mostrecent = nldict(2, attrgetter('timestamp'))
         >>> len(mostrecent)
         0
         >>> mostrecent[ilastweek.id] = ilastweek
@@ -69,10 +69,10 @@ class NLDict(dict, MutableMapping):
 
     Test initializers, don't specify a key function::
 
-        >>> largest2 = NLDict(2, None, [(1, 1), (2, 2), (3, 3)])
+        >>> largest2 = nldict(2, None, [(1, 1), (2, 2), (3, 3)])
         >>> sorted(largest2.values())
         [2, 3]
-        >>> largest3 = NLDict(3, None,
+        >>> largest3 = nldict(3, None,
         ...     twenty=20,
         ...     sixteen=16,
         ...     ten=10,
@@ -80,7 +80,7 @@ class NLDict(dict, MutableMapping):
         ...     )
         >>> sorted(largest3.values())
         [16, 20, 40]
-        >>> largest4 = NLDict(4, None, {
+        >>> largest4 = nldict(4, None, {
         ...     'one': 1,
         ...     'twenty': 20,
         ...     'sixteen': 16,
@@ -123,7 +123,7 @@ class NLDict(dict, MutableMapping):
 
     Test fromkeys (tie goes to already inserted)::
 
-        >>> largest2 = NLDict.fromkeys(2, None, (-1, 0, 1), 0)
+        >>> largest2 = nldict.fromkeys(2, None, (-1, 0, 1), 0)
         >>> sorted(largest2.items())
         [(-1, 0), (0, 0)]
 
@@ -149,11 +149,10 @@ class NLDict(dict, MutableMapping):
             raise ValueError('maxlen must be at least 1')
         if sortkey is not None and not hasattr(sortkey, '__call__'):
             raise ValueError('sortkey must be either None or a callable')
-        self._heap = []
         self._maxlen = maxlen
         self._sortkey = sortkey
-        if args or kwds:
-            self.update(*args, **kwds)
+        self._heap = []
+        self.update(*args, **kwds)
 
     def _maxlen_get(self):
         return self._maxlen
@@ -182,7 +181,7 @@ class NLDict(dict, MutableMapping):
         if len(self) < self._maxlen:
             heappush(self._heap, heapitem)
             dict.__setitem__(self, key, value)
-        elif heapitem[0] > self._heap[0][0]:
+        elif cmpval > self._heap[0][0]:
             removed = heapreplace(self._heap, heapitem)
             dict.__delitem__(self, removed[1])
             dict.__setitem__(self, key, value)
@@ -235,7 +234,7 @@ class NLDict(dict, MutableMapping):
 def maybe_nldict(maxlen=None, sortkey=None, *args, **kwds):
     if maxlen is None:
         return dict(*args, **kwds)
-    return NLDict(maxlen, sortkey, *args, **kwds)
+    return nldict(maxlen, sortkey, *args, **kwds)
 
 
 if __name__ == '__main__':
