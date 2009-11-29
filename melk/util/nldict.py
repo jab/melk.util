@@ -1,5 +1,6 @@
 from collections import MutableMapping
 from heapq import heapify, heappop, heappush, heapreplace
+from itertools import izip, repeat
 
 
 # based on OrderedDict recipe for Python >= 2.6:
@@ -229,11 +230,7 @@ class NLDict(dict, MutableMapping):
 
     @classmethod
     def fromkeys(cls, maxlen, sortkey, iterable, value=None):
-        d = cls(maxlen, sortkey)
-        for key in iterable:
-            d[key] = value
-        return d
-
+        return cls(maxlen, sortkey, izip(iterable, repeat(value)))
 
 def maybe_nldict(maxlen=None, sortkey=None, *args, **kwds):
     if maxlen is None:
