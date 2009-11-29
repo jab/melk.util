@@ -110,16 +110,33 @@ class nldict(dict, MutableMapping):
         >>> sorted(largest4.items(), key=itemgetter(1))
         [('forty', 40), ('fifty', 50)]
 
-    Test changing maxlen::
+    Test changing maxlen on a copy::
         
         >>> largestn = largest4.copy()
-        >>> largestn.maxlen = 1 # should discard 40
+        >>> sorted(largestn.items(), key=itemgetter(1))
+        [('forty', 40), ('fifty', 50)]
+        >>> largestn.maxlen = 1 # try decreasing. should discard 40
         >>> sorted(largestn.items(), key=itemgetter(1))
         [('fifty', 50)]
-        >>> largestn.maxlen = 5
+        >>> len(largest4) # the original should not have been changed
+        2
+        >>> largestn.maxlen = 5 # try increasing
         >>> largestn.update(a=100, b=101, c=102, d=103, e=104, f=105)
         >>> sorted(largestn.values())
         [101, 102, 103, 104, 105]
+
+    Test changing sortkey::
+
+        >>> # start with an nlargest
+        >>> flipflop = nldict(2, None, {'one': 1, 'two': 2})
+        >>> flipflop['three'] = 3 # discards 1
+        >>> sorted(flipflop.items(), key=itemgetter(1))
+        [('two', 2), ('three', 3)]
+        >>> # make it an nsmallest
+        >>> flipflop.sortkey = lambda x: -x
+        >>> flipflop['one'] = 1 # discards 3
+        >>> sorted(flipflop.items(), key=itemgetter(1))
+        [('one', 1), ('two', 2)]
 
     Test fromkeys (tie goes to already inserted)::
 
@@ -131,8 +148,8 @@ class nldict(dict, MutableMapping):
 
     def __init__(self, maxlen, sortkey, *args, **kwds):
         """
-        :param maxlen: the maximum number of elements to contain before smallest
-            elements start falling off the end; must be at least 1
+        :param maxlen: the max number of mappings stored before the ones with
+            smallest sort value start being discarded; must be at least 1
         :param sortkey: function to call on contained elements to determine
             their ordering, e.g. operator.attrgetter('timestamp'); pass ``None``
             to compare contained elements directly
@@ -158,12 +175,36 @@ class nldict(dict, MutableMapping):
         return self._maxlen
 
     def _maxlen_set(self, value):
+        if self._maxlen == value:
+            return
         self._maxlen = value
         nover = max(0, len(self) - value)
         for i in xrange(nover):
             self.popsmallest()
 
-    maxlen = property(_maxlen_get, _maxlen_set)
+    maxlen = property(_maxlen_get, _maxlen_set, doc="""\
+        The maximum number of mappings stored. Can be changed after
+        instantiation. If changed to a smaller capacity, the smallest mappings
+        are popped off until the new capacity is reached.
+        """)
+
+    def _sortkey_get(self):
+        return self._sortkey
+    
+    def _sortkey_set(self, value):
+        if self._sortkey == value:
+            return
+        self._sortkey = value
+        newheap = [(value(v) if value else v, k) for (k, v) in self.iteritems()]
+        heapify(newheap)
+        self._heap = newheap
+
+    sortkey = property(_sortkey_get, _sortkey_set, doc="""\
+        The function called on mapping values to determine their sort order.
+        A value of ``None`` indicates the values themselves are used. If
+        changed after instantiation, the underlying sort order is updated
+        accordingly.
+        """)
 
     def clear(self):
         del self._heap[:]
