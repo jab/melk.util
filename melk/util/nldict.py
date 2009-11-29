@@ -1,6 +1,7 @@
 from collections import MutableMapping
 from heapq import heapify, heappop, heappush, heapreplace
 from itertools import izip, repeat
+from functools import wraps
 
 
 # based on OrderedDict recipe for Python >= 2.6:
@@ -125,6 +126,19 @@ class nldict(dict, MutableMapping):
         >>> sorted(largestn.values())
         [101, 102, 103, 104, 105]
 
+    Test maxlen of None (should behave like a regular dict)::
+
+        >>> largestn.maxlen = None
+        >>> largestn.update(one=1, two=2)
+        >>> sorted(largestn.items(), key=itemgetter(1))
+        [('one', 1), ('two', 2), ('b', 101), ('c', 102), ('d', 103), ('e', 104), ('f', 105)]
+        >>> largestn['three'] = 3
+        >>> largestn.pop('three')
+        3
+        >>> largestn.maxlen = 2 # test changing back
+        >>> sorted(largestn.items(), key=itemgetter(1))
+        [('e', 104), ('f', 105)]
+
     Test changing sortkey::
 
         >>> # start with an nlargest
@@ -149,10 +163,11 @@ class nldict(dict, MutableMapping):
     def __init__(self, maxlen, sortkey, *args, **kwds):
         """
         :param maxlen: the max number of mappings stored before the ones with
-            smallest sort value start being discarded; must be at least 1
+            smallest sort value start being discarded. Must be at least 1.
+            Pass ``None`` to specify no max (like a regular ``dict``).
         :param sortkey: function to call on contained elements to determine
-            their ordering, e.g. operator.attrgetter('timestamp'); pass ``None``
-            to compare contained elements directly
+            their ordering, e.g. ``operator.attrgetter('timestamp')``.
+            Pass ``None`` to compare contained elements directly.
 
         Additional positional or keyword arguments are passed to :attr:`update`.
 
@@ -162,8 +177,8 @@ class nldict(dict, MutableMapping):
             :exc:`TypeError` if more than one positional argument was given via
             *args
         """
-        if maxlen <= 0:
-            raise ValueError('maxlen must be at least 1')
+        if maxlen is not None and maxlen <= 0:
+            raise ValueError('maxlen must be either None or at least 1')
         if sortkey is not None and not hasattr(sortkey, '__call__'):
             raise ValueError('sortkey must be either None or a callable')
         self._maxlen = maxlen
@@ -171,21 +186,31 @@ class nldict(dict, MutableMapping):
         self._heap = []
         self.update(*args, **kwds)
 
+    def _reheapify(self):
+        sk = self._sortkey
+        self._heap = [(sk(v) if sk else v, k) for (k, v) in self.iteritems()]
+        heapify(self._heap)
+
     def _maxlen_get(self):
         return self._maxlen
 
     def _maxlen_set(self, value):
         if self._maxlen == value:
             return
+        if value is not None:
+            if self._maxlen is None:
+                self._reheapify()
+            self._maxlen = value
+            nover = max(0, len(self) - value)
+            for i in xrange(nover):
+                self.popsmallest()
         self._maxlen = value
-        nover = max(0, len(self) - value)
-        for i in xrange(nover):
-            self.popsmallest()
 
     maxlen = property(_maxlen_get, _maxlen_set, doc="""\
         The maximum number of mappings stored. Can be changed after
         instantiation. If changed to a smaller capacity, the smallest mappings
-        are popped off until the new capacity is reached.
+        are popped off until the new capacity is reached. A value of ``None``
+        indicates unlimited capacity.
         """)
 
     def _sortkey_get(self):
@@ -195,9 +220,8 @@ class nldict(dict, MutableMapping):
         if self._sortkey == value:
             return
         self._sortkey = value
-        newheap = [(value(v) if value else v, k) for (k, v) in self.iteritems()]
-        heapify(newheap)
-        self._heap = newheap
+        if self._maxlen is not None:
+            self._reheapify()
 
     sortkey = property(_sortkey_get, _sortkey_set, doc="""\
         The function called on mapping values to determine their sort order.
@@ -216,6 +240,19 @@ class nldict(dict, MutableMapping):
         """
         return self.__class__(self._maxlen, self._sortkey, self)
 
+    def _onlyifmaxlen(method):
+        """
+        Decorator for dict functions which nldict overrides only if its maxlen
+        is not None.
+        """
+        @wraps(method, ('__name__', '__doc__'))
+        def wrapper(self, *args, **kwds):
+            if self._maxlen is not None:
+                return method(self, *args, **kwds)
+            return getattr(dict, method.__name__)(self, *args, **kwds)
+        return wrapper
+
+    @_onlyifmaxlen
     def __setitem__(self, key, value):
         cmpval = self._sortkey(value) if self._sortkey else value
         heapitem = (cmpval, key)
@@ -227,6 +264,7 @@ class nldict(dict, MutableMapping):
             dict.__delitem__(self, removed[1])
             dict.__setitem__(self, key, value)
 
+    @_onlyifmaxlen
     def __delitem__(self, key):
         """
         This is not O(1) because we have to traverse the heap to find the item
@@ -238,9 +276,11 @@ class nldict(dict, MutableMapping):
         self._heap.remove(heapitem)
         heapify(self._heap)
 
-    def popsmallest(self):
+    @_onlyifmaxlen
+    def popitem(self):
         """
-        Removes and returns the (key, value) pair with smallest sorted value.
+        Removes and returns the (key, value) pair with smallest sorted value
+        if available.
         """
         if not self:
             raise KeyError
@@ -249,7 +289,7 @@ class nldict(dict, MutableMapping):
         value = dict.pop(self, key)
         return key, value
 
-    popitem = popsmallest
+    popsmallest = popitem
 
     __iter__ = dict.__iter__
 
@@ -264,18 +304,13 @@ class nldict(dict, MutableMapping):
 
     def __repr__(self):
         pairs = ', '.join(map('%r: %r'.__mod__, self.items()))
-        return '%s(maxlen=%d, sortkey=%r, {%s})' % (self.__class__.__name__,
+        return '%s(maxlen=%r, sortkey=%r, {%s})' % (self.__class__.__name__,
             self._maxlen, self._sortkey, pairs)
     __str__ = __repr__
 
     @classmethod
     def fromkeys(cls, maxlen, sortkey, iterable, value=None):
         return cls(maxlen, sortkey, izip(iterable, repeat(value)))
-
-def maybe_nldict(maxlen=None, sortkey=None, *args, **kwds):
-    if maxlen is None:
-        return dict(*args, **kwds)
-    return nldict(maxlen, sortkey, *args, **kwds)
 
 
 if __name__ == '__main__':
