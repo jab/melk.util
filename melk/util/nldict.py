@@ -12,7 +12,7 @@ class NLDict(dict, MutableMapping):
     kicks the smallest one out when inserted.
 
         >>> from datetime import datetime, timedelta
-        >>> from operator import attrgetter
+        >>> from operator import attrgetter, itemgetter
         >>> class NewsItem(object):
         ...     def __init__(self, id, timestamp):
         ...         self.id = id
@@ -86,8 +86,8 @@ class NLDict(dict, MutableMapping):
         ...     'ten': 10,
         ...     'forty': 40,
         ...     })
-        >>> sorted(largest4.values())
-        [10, 16, 20, 40]
+        >>> sorted(largest4.items(), key=itemgetter(1))
+        [('ten', 10), ('sixteen', 16), ('twenty', 20), ('forty', 40)]
 
     Test the rest of the interface::
 
@@ -95,20 +95,26 @@ class NLDict(dict, MutableMapping):
         40
         >>> largest4.setdefault('twelve', 12) # replaces 10
         12
-        >>> largest4['twelve']
-        12
-        >>> largest4.popsmallest()
-        ('twelve', 12)
-        >>> del largest4['sixteen']
-        >>> len(largest4)
-        2
+        >>> sorted(largest4.items(), key=itemgetter(1))
+        [('twelve', 12), ('sixteen', 16), ('twenty', 20), ('forty', 40)]
+        >>> largest4.update([('fifty', 50), ('sixty', 60)])
+        >>> sorted(largest4.items(), key=itemgetter(1))
+        [('twenty', 20), ('forty', 40), ('fifty', 50), ('sixty', 60)]
+        >>> largest4.update({'zero': 0}, one=1) # too small to go in
+        >>> sorted(largest4.items(), key=itemgetter(1))
+        [('twenty', 20), ('forty', 40), ('fifty', 50), ('sixty', 60)]
+        >>> largest4.popitem() # pops the smallest mapping
+        ('twenty', 20)
+        >>> del largest4['sixty']
+        >>> sorted(largest4.items(), key=itemgetter(1))
+        [('forty', 40), ('fifty', 50)]
 
     Test changing maxlen::
         
-        >>> largestn = largest4
-        >>> largestn.maxlen = 1 # should discard 20
-        >>> largestn.values()
-        [40]
+        >>> largestn = largest4.copy()
+        >>> largestn.maxlen = 1 # should discard 40
+        >>> sorted(largestn.items(), key=itemgetter(1))
+        [('fifty', 50)]
         >>> largestn.maxlen = 5
         >>> largestn.update(a=100, b=101, c=102, d=103, e=104, f=105)
         >>> sorted(largestn.values())
@@ -162,6 +168,12 @@ class NLDict(dict, MutableMapping):
     def clear(self):
         del self._heap[:]
         dict.clear(self)
+    
+    def copy(self):
+        """
+        Returns a shallow copy.
+        """
+        return self.__class__(self._maxlen, self._sortkey, self)
 
     def __setitem__(self, key, value):
         cmpval = self._sortkey(value) if self._sortkey else value
@@ -177,7 +189,7 @@ class NLDict(dict, MutableMapping):
     def __delitem__(self, key):
         """
         This is not O(1) because we have to traverse the heap to find the item
-        to delete and then reheapify
+        to delete and then reheapify!
         """
         value = dict.pop(self, key)
         cmpval = self._sortkey(value) if self._sortkey else value
@@ -186,6 +198,9 @@ class NLDict(dict, MutableMapping):
         heapify(self._heap)
 
     def popsmallest(self):
+        """
+        Removes and returns the (key, value) pair with smallest sorted value.
+        """
         if not self:
             raise KeyError
         removed = heappop(self._heap)
@@ -208,7 +223,9 @@ class NLDict(dict, MutableMapping):
 
     def __repr__(self):
         pairs = ', '.join(map('%r: %r'.__mod__, self.items()))
-        return '%s(maxlen=%d, {%s})' % (self.__class__.__name__, self._maxlen, pairs)
+        return '%s(maxlen=%d, sortkey=%r, {%s})' % (self.__class__.__name__,
+            self._maxlen, self._sortkey, pairs)
+    __str__ = __repr__
 
     @classmethod
     def fromkeys(cls, maxlen, sortkey, iterable, value=None):
