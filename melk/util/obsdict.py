@@ -1,7 +1,6 @@
 class obsdict(dict):
     """
-    Factory function for generating an observable mutable mapping class from
-    the mutable mapping type passed in (e.g. ``dict``).
+    Extend built-in ``dict`` to implement the observer pattern.
 
     Observers can implement the callbacks ``mapping_set`` and
     ``mapping_deleted`` to be notified of the corresponding events.
