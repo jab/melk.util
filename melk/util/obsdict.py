@@ -1,6 +1,3 @@
-from functools import wraps
-
-
 class obsdict(dict):
     """
     Observable dict class. Observers can implement the callbacks ``mapping_set`` and
