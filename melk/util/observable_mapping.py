@@ -103,7 +103,7 @@ def make_observable(mappingtype, name=None):
             self._notify('mapping_set', key, val)
 
         def update(self, *args, **kwds):
-            for k, v in mappingtype(*args, **kwds).iteritems():
+            for k, v in dict(*args, **kwds).iteritems():
                 try:
                     oldv = self[k]
                 except KeyError:
