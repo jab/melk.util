@@ -3,10 +3,11 @@ from heapq import heapify, heappop, heappush, heapreplace
 from itertools import izip, repeat
 from functools import wraps
 
+from melk.util.obsdict import obsdict
 
 # based on OrderedDict recipe for Python >= 2.6:
 # http://code.activestate.com/recipes/576669/
-class nldict(dict, MutableMapping):
+class nldict(obsdict, MutableMapping):
     """
     Mapping type that stores only the n largest elements according to an
     arbitrary comparison function ``sortkey`` (pass ``None`` to compare
@@ -181,6 +182,7 @@ class nldict(dict, MutableMapping):
             raise ValueError('maxlen must be either None or at least 1')
         if sortkey is not None and not hasattr(sortkey, '__call__'):
             raise ValueError('sortkey must be either None or a callable')
+        obsdict.__init__(self)
         self._maxlen = maxlen
         self._sortkey = sortkey
         self._heap = []
@@ -232,7 +234,7 @@ class nldict(dict, MutableMapping):
 
     def clear(self):
         del self._heap[:]
-        dict.clear(self)
+        obsdict.clear(self)
     
     def copy(self):
         """
@@ -249,7 +251,7 @@ class nldict(dict, MutableMapping):
         def wrapper(self, *args, **kwds):
             if self._maxlen is not None:
                 return method(self, *args, **kwds)
-            return getattr(dict, method.__name__)(self, *args, **kwds)
+            return getattr(obsdict, method.__name__)(self, *args, **kwds)
         return wrapper
 
     @_onlyifmaxlen
@@ -258,11 +260,11 @@ class nldict(dict, MutableMapping):
         heapitem = (cmpval, key)
         if len(self) < self._maxlen:
             heappush(self._heap, heapitem)
-            dict.__setitem__(self, key, value)
+            obsdict.__setitem__(self, key, value)
         elif cmpval > self._heap[0][0]:
             removed = heapreplace(self._heap, heapitem)
-            dict.__delitem__(self, removed[1])
-            dict.__setitem__(self, key, value)
+            obsdict.__delitem__(self, removed[1])
+            obsdict.__setitem__(self, key, value)
 
     @_onlyifmaxlen
     def __delitem__(self, key):
@@ -270,7 +272,7 @@ class nldict(dict, MutableMapping):
         This is not O(1) because we have to traverse the heap to find the item
         to delete and then reheapify!
         """
-        value = dict.pop(self, key)
+        value = obsdict.pop(self, key)
         cmpval = self._sortkey(value) if self._sortkey else value
         heapitem = (cmpval, key)
         self._heap.remove(heapitem)
@@ -286,10 +288,10 @@ class nldict(dict, MutableMapping):
             raise KeyError
         removed = heappop(self._heap)
         key = removed[1]
-        value = dict.pop(self, key)
+        value = obsdict.pop(self, key)
         return key, value
 
-    __iter__ = dict.__iter__
+    __iter__ = obsdict.__iter__
 
     # Methods with indirect access via the above methods
 
