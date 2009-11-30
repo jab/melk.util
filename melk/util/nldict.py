@@ -180,9 +180,9 @@ class nldict(obsdict, MutableMapping):
         :param maxlen: the max number of mappings stored before the ones with
             smallest sort value start being discarded. Must be at least 1.
             Pass ``None`` to specify no max (like a regular ``dict``).
-        :param sortkey: function to call on contained elements to determine
+        :param sortkey: function to call on mapping values to determine
             their ordering, e.g. ``operator.attrgetter('timestamp')``.
-            Pass ``None`` to compare contained elements directly.
+            Pass ``None`` to compare values directly.
 
         Additional positional or keyword arguments are passed to :attr:`update`.
 
