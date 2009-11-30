@@ -186,8 +186,8 @@ class nldict(obsdict, MutableMapping):
 
         Additional positional or keyword arguments are passed to :attr:`update`.
 
-        :raises: :exc:`ValueError` if :attr:`maxlen` <= 0 or :attr:`sortkey` is
-            neither ``None`` nor a callable
+        :raises: :exc:`ValueError` if :attr:`maxlen` is neither None nor <= 0 or
+            if :attr:`sortkey` is neither ``None`` nor a callable
         :raises: any exception raised by the :attr:`update` call, e.g.
             :exc:`TypeError` if more than one positional argument was given via
             *args
