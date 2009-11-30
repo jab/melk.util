@@ -9,22 +9,36 @@ from melk.util.obsdict import obsdict
 # http://code.activestate.com/recipes/576669/
 class nldict(obsdict, MutableMapping):
     """
-    Mapping type that stores only the n largest elements according to an
-    arbitrary comparison function ``sortkey`` (pass ``None`` to compare
-    elements directly). Once the mapping reaches capacity, a larger item
-    kicks the smallest one out when inserted.
+    A ``MutableMapping`` that stores only the ``maxlen`` mappings of largest
+    value according to comparison function ``sortkey``, which should provide
+    an ordering over the mapped value type. Once the map reaches capacity,
+    inserting a mapping with a larger value kicks out the mapping with
+    smallest value.
+
+    Inherits from ``obsdict`` rather than ``dict`` to provide a callback
+    mechanism you can use to tell whether an item you attempted to insert
+    was actually inserted.
+
+    Pass a ``maxlen`` of ``None`` to behave like a normal unbounded ``dict``.
+
+    Pass a ``sortkey`` of ``None`` to compare mapping values directly.
+
+    Example::
 
         >>> from datetime import datetime, timedelta
         >>> from operator import attrgetter, itemgetter
+
         >>> class NewsItem(object):
         ...     def __init__(self, id, timestamp):
         ...         self.id = id
         ...         self.timestamp = timestamp
+
         >>> now = datetime.utcnow()
         >>> inow = NewsItem('n', now)
         >>> ilastweek = NewsItem('lw', now - timedelta(days=7))
         >>> ilastmonth = NewsItem('lm', now - timedelta(days=31))
         >>> ilastyear = NewsItem('ly', now - timedelta(days=365))
+
         >>> mostrecent = nldict(2, attrgetter('timestamp'))
         >>> len(mostrecent)
         0
