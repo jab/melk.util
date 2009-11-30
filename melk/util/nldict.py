@@ -203,7 +203,7 @@ class nldict(dict, MutableMapping):
             self._maxlen = value
             nover = max(0, len(self) - value)
             for i in xrange(nover):
-                self.popsmallest()
+                self.popitem()
         self._maxlen = value
 
     maxlen = property(_maxlen_get, _maxlen_set, doc="""\
@@ -288,8 +288,6 @@ class nldict(dict, MutableMapping):
         key = removed[1]
         value = dict.pop(self, key)
         return key, value
-
-    popsmallest = popitem
 
     __iter__ = dict.__iter__
 
