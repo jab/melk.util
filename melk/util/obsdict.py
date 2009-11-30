@@ -1,10 +1,16 @@
-class obsdict(dict):
+from collections import MutableMapping
+
+def make_observable(mappingtype, name=None):
     """
-    Observable dict class. Observers can implement the callbacks ``mapping_set`` and
+    Factory function for generating an observable mutable mapping class from
+    the mutable mapping type passed in (e.g. ``dict``).
+
+    Observers can implement the callbacks ``mapping_set`` and
     ``mapping_deleted`` to be notified of the corresponding events.
 
     Example::
 
+        >>> obsdict = make_observable(dict, name='obsdict')
         >>> class Logger(object):
         ...     @staticmethod
         ...     def mapping_set(map, key, val):
@@ -38,78 +44,88 @@ class obsdict(dict):
         >>> d.clear()
         deleted 'foo' -> 'bar' from obsdict({...}) at 0x...
     """
-    def __init__(self, *args, **kw):
-        dict.__init__(self, *args, **kw)
-        self._observers = []
+    if not issubclass(mappingtype, MutableMapping):
+        raise TypeError('Must pass in a MutableMapping')
 
-    @property
-    def observers(self):
-        """
-        Read-only access to :attr:`_obs`. With the guarantee that the
-        underlying list object will not change, clients can add or remove
-        observers from it across multiple threads without issue.
-        """
-        return self._observers
+    class observable(mappingtype):
+        def __init__(self, *args, **kw):
+            mappingtype.__init__(self, *args, **kw)
+            self._observers = []
 
-    ## XXX locking?
+        @property
+        def observers(self):
+            """
+            Read-only access to :attr:`_obs`. With the guarantee that the
+            underlying list object will not change, clients can add or remove
+            observers from it across multiple threads without issue.
+            """
+            return self._observers
 
-    def _notify(self, callbackname, *args, **kwds):
-        for o in self._observers:
-            try:
-                callback = getattr(o, callbackname)
-            except AttributeError:
-                pass
-            else:
-                callback(self, *args, **kwds)
+        ## XXX locking?
 
-    def __delitem__(self, key):
-        val = self[key]
-        dict.__delitem__(self, key)
-        self._notify('mapping_deleted', key, val)
+        def _notify(self, callbackname, *args, **kwds):
+            for o in self._observers:
+                try:
+                    callback = getattr(o, callbackname)
+                except AttributeError:
+                    pass
+                else:
+                    callback(self, *args, **kwds)
 
-    def pop(self, key):
-        val = dict.pop(self, key)
-        self._notify('mapping_deleted', key, val)
-        return val
-
-    def popitem(self):
-        key, val = dict.popitem(self)
-        self._notify('mapping_deleted', key, val)
-        return key, val
-
-    def clear(self):
-        for key, val in self.iteritems():
+        def __delitem__(self, key):
+            val = self[key]
+            mappingtype.__delitem__(self, key)
             self._notify('mapping_deleted', key, val)
-        dict.clear(self)
-    
-    def __setitem__(self, key, val):
-        try:
-            oldval = self[key]
-        except KeyError:
-            pass
-        else:
-            self._notify('mapping_deleted', key, oldval)
-        dict.__setitem__(self, key, val)
-        self._notify('mapping_set', key, val)
 
-    def update(self, *args, **kwds):
-        for k, v in dict(*args, **kwds).iteritems():
+        def pop(self, key):
+            val = mappingtype.pop(self, key)
+            self._notify('mapping_deleted', key, val)
+            return val
+
+        def popitem(self):
+            key, val = mappingtype.popitem(self)
+            self._notify('mapping_deleted', key, val)
+            return key, val
+
+        def clear(self):
+            for key, val in self.iteritems():
+                self._notify('mapping_deleted', key, val)
+            mappingtype.clear(self)
+        
+        def __setitem__(self, key, val):
             try:
-                oldv = self[k]
+                oldval = self[key]
             except KeyError:
                 pass
             else:
-                self._notify('mapping_deleted', k, oldv)
-            self._notify('mapping_set', k, v)
-        dict.update(self, *args, **kwds)
+                self._notify('mapping_deleted', key, oldval)
+            mappingtype.__setitem__(self, key, val)
+            self._notify('mapping_set', key, val)
 
-    def __str__(self):
-        return '%s({%s})' % (self.__class__.__name__,
-            ', '.join(('%r: %r' % (k, v) for (k, v) in self.iteritems())))
+        def update(self, *args, **kwds):
+            for k, v in mappingtype(*args, **kwds).iteritems():
+                try:
+                    oldv = self[k]
+                except KeyError:
+                    pass
+                else:
+                    self._notify('mapping_deleted', k, oldv)
+                self._notify('mapping_set', k, v)
+            mappingtype.update(self, *args, **kwds)
 
-    def __repr__(self):
-        return '%s at %s' % (self, hex(id(self)))
+        def __str__(self):
+            return '%s({%s})' % (self.__class__.__name__,
+                ', '.join(('%r: %r' % (k, v) for (k, v) in self.iteritems())))
 
+        def __repr__(self):
+            return '%s at %s' % (self, hex(id(self)))
+
+    if name is None:
+        observable.__name__ = 'observable' + mappingtype.__name__
+    else:
+        observable.__name__ = name
+
+    return observable
 
 if __name__ == '__main__':
     import doctest
