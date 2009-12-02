@@ -204,7 +204,8 @@ class nldict(obsdict, MutableMapping):
 
     def _reheapify(self):
         sk = self._sortkey
-        self._heap = [(sk(v) if sk else v, k) for (k, v) in self.iteritems()]
+        self._heap = [(sk(v), k) for (k, v) in self.iteritems()] if sk else \
+                     [(v, k) for (k, v) in self.iteritems()]
         heapify(self._heap)
 
     def _maxlen_get(self):
