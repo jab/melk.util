@@ -192,8 +192,9 @@ class nldict(obsdict, MutableMapping):
             :exc:`TypeError` if more than one positional argument was given via
             *args
         """
-        if maxlen is not None and maxlen <= 0:
-            raise ValueError('maxlen must be either None or at least 1')
+        if not (maxlen is None or (isinstance(maxlen, int) and maxlen > 0)):
+            raise ValueError(
+                'maxlen must be either None or at least 1, got %r' % maxlen)
         if sortkey is not None and not hasattr(sortkey, '__call__'):
             raise ValueError('sortkey must be either None or a callable')
         obsdict.__init__(self)
@@ -215,6 +216,9 @@ class nldict(obsdict, MutableMapping):
         if self._maxlen == value:
             return
         if value is not None:
+            if not (isinstance(value, int) and value > 0):
+                raise ValueError(
+                    'maxlen must be either None or at least 1, got %r' % value)
             if self._maxlen is None:
                 self._reheapify()
             self._maxlen = value
