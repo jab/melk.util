@@ -28,7 +28,7 @@ setup(
     author_email="ltucker@openplans.org",
     url="http://melkjug.openplans.org",
     install_requires=[
-     "httplib2<0.5",
+     "httplib2",
      "simplejson",
      "FormEncode>=1.2",
      "feedparser",
